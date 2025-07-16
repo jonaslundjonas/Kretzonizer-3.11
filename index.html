@@ -2,64 +2,67 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Kretzonizer v3.11</title>
+    <title>Kretzonizer v3.8</title>
     <style>
-        /* --- Styles remain the same --- */
+        /* --- Styles --- */
         body { background: #1a1a1a; color: white; font-family: Arial, sans-serif; padding: 20px; margin: 0; }
         .container { max-width: 1800px; margin: 0 auto; padding: 20px; }
         header, footer { text-align: center; margin-bottom: 20px; }
         h1 { margin: 10px 0; }
-        .controls { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
-        .control-group { padding: 15px; border: 1px solid #383838; border-radius: 6px; background-color: #2f2f2f; display: flex; flex-direction: column; }
-        .control-group h3 { margin-top: 0; margin-bottom: 15px; color: #4CAF50; border-bottom: 1px solid #444; padding-bottom: 8px; text-align: center; }
-         /* Header row within control group for toggles */
+        .controls { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; }
+        .control-group { padding: 12px; border: 1px solid #383838; border-radius: 6px; background-color: #2f2f2f; display: flex; flex-direction: column; }
+        .control-group h3 { margin-top: 0; margin-bottom: 12px; color: #4CAF50; border-bottom: 1px solid #444; padding-bottom: 8px; text-align: center; }
         .control-group-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .control-group-header h3 { margin-bottom: 0; border-bottom: none; padding-bottom: 0; text-align: left; } /* Adjust title style */
-        .control-row { margin-bottom: 12px; display: flex; align-items: center; flex-wrap: wrap; width: 100%; }
-        label { width: 75px; display: inline-block; margin-right: 5px; font-size: 0.85em; color: #ccc; flex-shrink: 0; }
-        input[type="range"] { flex-grow: 1; margin: 0 5px; min-width: 100px; cursor: pointer; }
+        .control-group-header h3 { margin-bottom: 0; border-bottom: none; padding-bottom: 0; text-align: left; }
+        .control-row { margin-bottom: 10px; display: flex; align-items: center; flex-wrap: wrap; width: 100%; }
+        label { width: 75px; display: inline-block; margin-right: 5px; font-size: 0.82em; color: #ccc; flex-shrink: 0; }
+        input[type="range"] { flex-grow: 1; margin: 0 5px; min-width: 80px; cursor: pointer; }
+        input[type="range"]:disabled { opacity: 0.4; cursor: not-allowed; }
         input[type="number"] { margin: 0 5px; width: 55px; padding: 4px; background: #333; color: white; border: 1px solid #555; border-radius: 3px; font-size: 0.9em; }
         select { padding: 6px; background: #333; color: white; border: 1px solid #555; border-radius: 4px; flex-grow: 1; min-width: 90px; cursor: pointer; }
         button.toggle-button { padding: 4px 8px; font-size: 0.8em; margin-left: 5px; min-width: 50px; background-color: #555; border: none; color: white; border-radius: 3px; cursor: pointer;}
         button.toggle-button.active { background-color: #4CAF50; }
         button:disabled { opacity: 0.5; cursor: not-allowed; }
         .sequencer-container { margin-bottom: 20px; }
-        .sequencer { display: grid; grid-template-columns: repeat(16, 1fr); gap: 5px; padding: 10px; background: #2a2a2a; border-radius: 8px; }
-        .step { aspect-ratio: 1; background: #333; border: none; border-radius: 4px; cursor: pointer; position: relative; min-width: 20px; }
+        .sequencer { display: grid; grid-template-columns: repeat(var(--sequencer-steps, 16), 1fr); gap: 4px; padding: 10px; background: #2a2a2a; border-radius: 8px; }
+        .step { aspect-ratio: 1; background: #333; border: none; border-radius: 4px; cursor: pointer; position: relative; min-width: 15px; }
         .step.active { background: #4CAF50; }
         .step.current { border: 2px solid white; box-shadow: 0 0 5px white; }
-        .note-display { position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%); font-size: 10px; color: white; white-space: nowrap; }
-        .velocity-container { display: grid; grid-template-columns: repeat(16, 1fr); gap: 5px; padding: 10px; background: #2a2a2a; border-radius: 8px; margin-top: 25px; }
-        .velocity-step { width: 100%; height: 30px; background: #444; border-radius: 4px; cursor: ns-resize; position: relative; min-width: 20px; }
+        .note-display { position: absolute; bottom: -16px; left: 50%; transform: translateX(-50%); font-size: 9px; color: white; white-space: nowrap; }
+        .velocity-container { display: grid; grid-template-columns: repeat(var(--sequencer-steps, 16), 1fr); gap: 4px; padding: 10px; background: #2a2a2a; border-radius: 8px; margin-top: 25px; }
+        .velocity-step { width: 100%; height: 25px; background: #444; border-radius: 4px; cursor: ns-resize; position: relative; min-width: 15px; }
         .velocity-step.active { background: #888; }
-        .velocity-value { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 11px; pointer-events: none; }
+        .velocity-value { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 10px; pointer-events: none; }
         .transport { display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0; align-items: center; }
         button { padding: 8px 15px; background: #4CAF50; border: none; border-radius: 4px; color: white; cursor: pointer; font-size: 0.9em; }
         button:hover:not(:disabled) { background: #45a049; }
         #bpm { width: 50px; padding: 5px; background: #333; color: white; border: 1px solid #555; border-radius: 4px; }
-        .value-display { width: 65px; text-align: right; font-size: 0.8em; margin-left: 5px; white-space: nowrap; color: #ddd; flex-shrink: 0; }
+        .value-display { width: 65px; text-align: right; font-size: 0.82em; margin-left: 5px; white-space: nowrap; color: #ddd; flex-shrink: 0; }
         #loadFileInput { display: none; }
+        .sub-group { border-top: 1px solid #444; margin-top: 12px; padding-top: 10px; }
+        .sub-group-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-weight: bold; font-size: 0.9em; }
     </style>
 </head>
 <body>
     <header>
-        <h1>Kretzonizer v3.11</h1>
+        <h1>Kretzonizer v3.8</h1>
         <div>Written by Jonas Lund 2025</div>
     </header>
 
     <div class="container">
-        <!-- Controls Sections (Added Toggles) -->
+        <!-- Controls Sections -->
         <div class="controls">
              <!-- OSC 1 -->
              <div class="control-group">
-                 <div class="control-group-header"> <!-- Header for Title + Toggle -->
+                 <div class="control-group-header">
                     <h3>Oscillator 1</h3>
                     <button id="osc1PwToggleBtn" class="toggle-button active">PW ON</button>
                  </div>
-                 <div class="control-row"> <label>Waveform:</label> <select id="waveform1"> <option value="sawtooth" selected>Sawtooth</option> <option value="square">Square</option> <option value="pulse">Pulse</option> <option value="sine">Sine</option> <option value="triangle">Triangle</option> <option value="noise">Noise</option> </select> </div>
-                 <div class="control-row"> <label>Detune:</label> <input type="range" id="detune1" min="-100" max="100" step="1" value="0"> <span class="value-display" id="detune1Value">0 ct</span> </div>
-                 <div class="control-row"> <label>Octave:</label> <input type="range" id="octave1" min="-2" max="2" step="1" value="0"> <span class="value-display" id="octave1Value">0 oct</span> </div>
-                 <div class="control-row"> <label>Shape/PW:</label> <input type="range" id="pulseWidth1" min="0.01" max="0.99" step="0.01" value="0.5"> <span class="value-display" id="pulseWidth1Value">0.50</span> </div>
+                 <div class="control-row"> <label for="waveform1">Waveform:</label> <select id="waveform1"> <option value="sawtooth" selected>Sawtooth</option> <option value="square">Square</option> <option value="pulse">Pulse</option> <option value="sine">Sine</option> <option value="triangle">Triangle</option> <option value="noise">Noise</option> </select> </div>
+                 <div class="control-row"> <label for="pitch1">Pitch:</label> <input type="range" id="pitch1" min="-12" max="12" step="1" value="0"> <span class="value-display" id="pitch1Value">0 st</span> </div>
+                 <div class="control-row"> <label for="detune1">Detune:</label> <input type="range" id="detune1" min="-100" max="100" step="1" value="0"> <span class="value-display" id="detune1Value">0 ct</span> </div>
+                 <div class="control-row"> <label for="octave1">Octave:</label> <input type="range" id="octave1" min="-2" max="2" step="1" value="0"> <span class="value-display" id="octave1Value">0 oct</span> </div>
+                 <div class="control-row"> <label for="pulseWidth1">Shape/PW:</label> <input type="range" id="pulseWidth1" min="0.01" max="0.99" step="0.01" value="0.5" disabled> <span class="value-display" id="pulseWidth1Value">0.50</span> </div>
              </div>
              <!-- OSC 2 -->
              <div class="control-group">
@@ -67,20 +70,21 @@
                     <h3>Oscillator 2</h3>
                      <button id="osc2PwToggleBtn" class="toggle-button active">PW ON</button>
                   </div>
-                 <div class="control-row"> <label>Waveform:</label> <select id="waveform2"> <option value="sawtooth" selected>Sawtooth</option> <option value="square">Square</option> <option value="pulse">Pulse</option> <option value="sine">Sine</option> <option value="triangle">Triangle</option> <option value="noise">Noise</option> </select> </div>
-                 <div class="control-row"> <label>Detune:</label> <input type="range" id="detune2" min="-100" max="100" step="1" value="10"> <span class="value-display" id="detune2Value">10 ct</span> </div>
-                 <div class="control-row"> <label>Octave:</label> <input type="range" id="octave2" min="-2" max="2" step="1" value="0"> <span class="value-display" id="octave2Value">0 oct</span> </div>
-                 <div class="control-row"> <label>Shape/PW:</label> <input type="range" id="pulseWidth2" min="0.01" max="0.99" step="0.01" value="0.5"> <span class="value-display" id="pulseWidth2Value">0.50</span> </div>
+                 <div class="control-row"> <label for="waveform2">Waveform:</label> <select id="waveform2"> <option value="sawtooth" selected>Sawtooth</option> <option value="square">Square</option> <option value="pulse">Pulse</option> <option value="sine">Sine</option> <option value="triangle">Triangle</option> <option value="noise">Noise</option> </select> </div>
+                 <div class="control-row"> <label for="pitch2">Pitch:</label> <input type="range" id="pitch2" min="-12" max="12" step="1" value="0"> <span class="value-display" id="pitch2Value">0 st</span> </div>
+                 <div class="control-row"> <label for="detune2">Detune:</label> <input type="range" id="detune2" min="-100" max="100" step="1" value="10"> <span class="value-display" id="detune2Value">10 ct</span> </div>
+                 <div class="control-row"> <label for="octave2">Octave:</label> <input type="range" id="octave2" min="-2" max="2" step="1" value="0"> <span class="value-display" id="octave2Value">0 oct</span> </div>
+                 <div class="control-row"> <label for="pulseWidth2">Shape/PW:</label> <input type="range" id="pulseWidth2" min="0.01" max="0.99" step="0.01" value="0.5" disabled> <span class="value-display" id="pulseWidth2Value">0.50</span> </div>
              </div>
              <!-- Mixer/Master/Portamento -->
              <div class="control-group">
                  <h3>Mixer / Master</h3>
-                  <div class="control-row"> <label>Osc Mix:</label> <input type="range" id="oscMix" min="0" max="1" step="0.01" value="0.5"> <span class="value-display" id="oscMixValue">1:1</span> </div>
+                  <div class="control-row"> <label for="oscMix">Osc Mix:</label> <input type="range" id="oscMix" min="0" max="1" step="0.01" value="0.5"> <span class="value-display" id="oscMixValue">1:1</span> </div>
                   <div class="control-row" style="font-size: 0.8em; justify-content: center; margin-top: -10px; margin-bottom: 15px;"> <span style="margin-right: 10px;">(Osc1</span><span>Osc2)</span> </div>
-                  <div class="control-row"> <label>Volume:</label> <input type="range" id="masterVolume" min="0" max="1" step="0.01" value="0.7"> <span class="value-display" id="masterVolumeValue">0.70</span> </div>
-                  <div style="border-top: 1px solid #444; margin-top: 15px; padding-top: 10px;">
-                     <div class="control-row"> <strong>Portamento</strong> <button id="portaToggleBtn" class="toggle-button">OFF</button> </div>
-                     <div class="control-row"> <label>Time:</label> <input type="range" id="portaTime" min="0.001" max="3" step="0.001" value="0.1"> <span class="value-display" id="portaTimeValue">0.100s</span> </div> <!-- Max 3s -->
+                  <div class="control-row"> <label for="masterVolume">Volume:</label> <input type="range" id="masterVolume" min="0" max="1" step="0.01" value="0.7"> <span class="value-display" id="masterVolumeValue">0.70</span> </div>
+                  <div class="sub-group">
+                     <div class="sub-group-header"> Portamento <button id="portaToggleBtn" class="toggle-button">OFF</button> </div>
+                     <div class="control-row"> <label for="portaTime">Time:</label> <input type="range" id="portaTime" min="0.001" max="3" step="0.001" value="0.1"> <span class="value-display" id="portaTimeValue">0.100s</span> </div>
                  </div>
              </div>
              <!-- Filter -->
@@ -89,22 +93,24 @@
                     <h3>Filter</h3>
                      <button id="filterEnvToggleBtn" class="toggle-button active">ENV ON</button>
                  </div>
-                 <div class="control-row"> <label>Cutoff:</label> <input type="range" id="cutoff" min="20" max="20000" step="1" value="5000" data-log="true"> <span class="value-display" id="cutoffValue">5000 Hz</span> </div>
-                 <div class="control-row"> <label>Resonance:</label> <input type="range" id="resonance" min="0" max="30" step="0.1" value="5"> <span class="value-display" id="resonanceValue">5.0</span> </div>
-                 <div class="control-row" style="margin-top:15px; border-top: 1px solid #444; padding-top: 15px;"> <strong>Filter Env</strong> </div>
-                 <div class="control-row"> <label>F.Attack:</label> <input type="range" id="fAttack" min="0.001" max="2" step="0.001" value="0.1"> <span class="value-display" id="fAttackValue">0.100s</span> </div>
-                 <div class="control-row"> <label>F.Decay:</label> <input type="range" id="fDecay" min="0.001" max="2" step="0.001" value="0.2"> <span class="value-display" id="fDecayValue">0.200s</span> </div>
-                 <div class="control-row"> <label>F.Sustain:</label> <input type="range" id="fSustain" min="0" max="1" step="0.01" value="0.5"> <span class="value-display" id="fSustainValue">0.50</span> </div>
-                 <div class="control-row"> <label>F.Release:</label> <input type="range" id="fRelease" min="0.001" max="4" step="0.001" value="0.5"> <span class="value-display" id="fReleaseValue">0.500s</span> </div>
-                 <div class="control-row"> <label>F.Amount:</label> <input type="range" id="fAmount" min="-15000" max="15000" step="10" value="2000"> <span class="value-display" id="fAmountValue">2000</span> </div>
+                 <div class="control-row"> <label for="cutoff">Cutoff:</label> <input type="range" id="cutoff" min="20" max="20000" step="1" value="5000" data-log="true"> <span class="value-display" id="cutoffValue">5000 Hz</span> </div>
+                 <div class="control-row"> <label for="resonance">Resonance:</label> <input type="range" id="resonance" min="0" max="30" step="0.1" value="5"> <span class="value-display" id="resonanceValue">5.0</span> </div>
+                 <div class="sub-group">
+                    <div class="sub-group-header">Filter Env</div>
+                    <div class="control-row"> <label for="fAttack">F.Attack:</label> <input type="range" id="fAttack" min="0.001" max="2" step="0.001" value="0.1"> <span class="value-display" id="fAttackValue">0.100s</span> </div>
+                    <div class="control-row"> <label for="fDecay">F.Decay:</label> <input type="range" id="fDecay" min="0.001" max="2" step="0.001" value="0.2"> <span class="value-display" id="fDecayValue">0.200s</span> </div>
+                    <div class="control-row"> <label for="fSustain">F.Sustain:</label> <input type="range" id="fSustain" min="0" max="1" step="0.01" value="0.5"> <span class="value-display" id="fSustainValue">0.50</span> </div>
+                    <div class="control-row"> <label for="fRelease">F.Release:</label> <input type="range" id="fRelease" min="0.001" max="4" step="0.001" value="0.5"> <span class="value-display" id="fReleaseValue">0.500s</span> </div>
+                    <div class="control-row"> <label for="fAmount">F.Amount:</label> <input type="range" id="fAmount" min="-15000" max="15000" step="10" value="2000"> <span class="value-display" id="fAmountValue">2000</span> </div>
+                 </div>
              </div>
              <!-- Amp Env -->
              <div class="control-group">
                  <h3>Amp Env</h3>
-                 <div class="control-row"> <label>Attack:</label> <input type="range" id="attack" min="0.001" max="2" step="0.001" value="0.05"> <span class="value-display" id="attackValue">0.050s</span> </div>
-                 <div class="control-row"> <label>Decay:</label> <input type="range" id="decay" min="0.001" max="2" step="0.001" value="0.1"> <span class="value-display" id="decayValue">0.100s</span> </div>
-                 <div class="control-row"> <label>Sustain:</label> <input type="range" id="sustain" min="0" max="1" step="0.01" value="0.8"> <span class="value-display" id="sustainValue">0.80</span> </div>
-                 <div class="control-row"> <label>Release:</label> <input type="range" id="release" min="0.001" max="4" step="0.001" value="0.5"> <span class="value-display" id="releaseValue">0.500s</span> </div>
+                 <div class="control-row"> <label for="attack">Attack:</label> <input type="range" id="attack" min="0.001" max="2" step="0.001" value="0.05"> <span class="value-display" id="attackValue">0.050s</span> </div>
+                 <div class="control-row"> <label for="decay">Decay:</label> <input type="range" id="decay" min="0.001" max="2" step="0.001" value="0.1"> <span class="value-display" id="decayValue">0.100s</span> </div>
+                 <div class="control-row"> <label for="sustain">Sustain:</label> <input type="range" id="sustain" min="0" max="1" step="0.01" value="0.8"> <span class="value-display" id="sustainValue">0.80</span> </div>
+                 <div class="control-row"> <label for="release">Release:</label> <input type="range" id="release" min="0.001" max="4" step="0.001" value="0.5"> <span class="value-display" id="releaseValue">0.500s</span> </div>
              </div>
              <!-- LFO -->
              <div class="control-group">
@@ -112,10 +118,10 @@
                      <h3>LFO</h3>
                       <button id="lfoToggleBtn" class="toggle-button active">LFO ON</button>
                  </div>
-                 <div class="control-row"> <label>Waveform:</label> <select id="lfoWaveform"> <option value="sine" selected>Sine</option> <option value="square">Square</option> <option value="sawtooth">Sawtooth</option> <option value="triangle">Triangle</option> </select> </div>
-                 <div class="control-row"> <label>Rate:</label> <input type="range" id="lfoRate" min="0" max="30" step="0.1" value="5"> <span class="value-display" id="lfoRateValue">5.0 Hz</span> </div>
-                 <div class="control-row"> <label>Amount:</label> <input type="range" id="lfoAmount" min="-7200" max="7200" step="1" value="0"> <span class="value-display" id="lfoAmountValue">0</span> </div>
-                 <div class="control-row"> <label>Target:</label> <select id="lfoTarget"> <option value="off" selected>Off</option> <option value="cutoff">Filter Cutoff</option> <option value="pitch">Osc Pitch</option> <option value="pwm">Osc Shape/PW</option> <option value="mix">Osc Mix</option> <option value="volume">Volume</option> </select> </div>
+                 <div class="control-row"> <label for="lfoWaveform">Waveform:</label> <select id="lfoWaveform"> <option value="sine" selected>Sine</option> <option value="square">Square</option> <option value="sawtooth">Sawtooth</option> <option value="triangle">Triangle</option> </select> </div>
+                 <div class="control-row"> <label for="lfoRate">Rate:</label> <input type="range" id="lfoRate" min="0" max="30" step="0.1" value="5"> <span class="value-display" id="lfoRateValue">5.0 Hz</span> </div>
+                 <div class="control-row"> <label for="lfoAmount">Amount:</label> <input type="range" id="lfoAmount" min="-7200" max="7200" step="1" value="0"> <span class="value-display" id="lfoAmountValue">0</span> </div>
+                 <div class="control-row"> <label for="lfoTarget">Target:</label> <select id="lfoTarget"> <option value="off" selected>Off</option> <option value="cutoff">Filter Cutoff</option> <option value="pitch">Osc Pitch</option> <option value="pwm">Osc Shape/PW</option> <option value="mix">Osc Mix</option> <option value="volume">Volume</option> </select> </div>
              </div>
              <!-- Pitch Env -->
              <div class="control-group">
@@ -123,311 +129,585 @@
                       <h3>Pitch Env</h3>
                        <button id="pitchEnvToggleBtn" class="toggle-button active">ENV ON</button>
                   </div>
-                  <div class="control-row"> <label>P.Attack:</label> <input type="range" id="pAttack" min="0" max="2" step="0.001" value="0.0"> <span class="value-display" id="pAttackValue">0.000s</span> </div>
-                  <div class="control-row"> <label>P.Decay:</label> <input type="range" id="pDecay" min="0.001" max="2" step="0.001" value="0.1"> <span class="value-display" id="pDecayValue">0.100s</span> </div>
-                  <div class="control-row"> <label>P.Sustain:</label> <input type="range" id="pSustain" min="0" max="1" step="0.01" value="0.0"> <span class="value-display" id="pSustainValue">0.00</span> </div>
-                  <div class="control-row"> <label>P.Release:</label> <input type="range" id="pRelease" min="0" max="2" step="0.001" value="0.0"> <span class="value-display" id="pReleaseValue">0.000s</span> </div>
-                  <div class="control-row"> <label>P.Amount:</label> <input type="range" id="pAmount" min="-3600" max="3600" step="1" value="0"> <span class="value-display" id="pAmountValue">0 cents</span> </div>
+                  <div class="control-row"> <label for="pAttack">P.Attack:</label> <input type="range" id="pAttack" min="0" max="2" step="0.001" value="0.0"> <span class="value-display" id="pAttackValue">0.000s</span> </div>
+                  <div class="control-row"> <label for="pDecay">P.Decay:</label> <input type="range" id="pDecay" min="0.001" max="2" step="0.001" value="0.1"> <span class="value-display" id="pDecayValue">0.100s</span> </div>
+                  <div class="control-row"> <label for="pSustain">P.Sustain:</label> <input type="range" id="pSustain" min="0" max="1" step="0.01" value="0.0"> <span class="value-display" id="pSustainValue">0.00</span> </div>
+                  <div class="control-row"> <label for="pRelease">P.Release:</label> <input type="range" id="pRelease" min="0" max="2" step="0.001" value="0.0"> <span class="value-display" id="pReleaseValue">0.000s</span> </div>
+                  <div class="control-row"> <label for="pAmount">P.Amount:</label> <input type="range" id="pAmount" min="-3600" max="3600" step="1" value="0"> <span class="value-display" id="pAmountValue">0 cents</span> </div>
              </div>
               <!-- Effects -->
               <div class="control-group">
                   <h3>Effects</h3>
-                  <div style="border-bottom: 1px solid #444; margin-bottom: 15px; padding-bottom: 10px;">
-                      <div class="control-row"> <strong>Delay</strong> <button id="delayToggleBtn" class="toggle-button active">ON</button> </div>
-                      <div class="control-row"> <label>Time:</label> <input type="range" id="delayTime" min="0.01" max="2" step="0.01" value="0.3"> <span class="value-display" id="delayTimeValue">0.30s</span> </div>
-                      <div class="control-row"> <label>Feedback:</label> <input type="range" id="delayFeedback" min="0" max="0.95" step="0.01" value="0.4"> <span class="value-display" id="delayFeedbackValue">0.40</span> </div>
-                      <div class="control-row"> <label>Mix:</label> <input type="range" id="delayMix" min="0" max="1" step="0.01" value="0.35"> <span class="value-display" id="delayMixValue">0.35</span> </div>
+                  <div class="sub-group" style="border-top: none; margin-top: 0; padding-top: 0;">
+                      <div class="sub-group-header"> Delay <button id="delayToggleBtn" class="toggle-button active">ON</button> </div>
+                      <div class="control-row">
+                          <label for="delayTimeSync">Time:</label>
+                          <select id="delayTimeSync" style="flex-grow: 2;">
+                            <option value="1">1/1</option>
+                            <option value="0.75">1/2d</option>
+                            <option value="0.6667">1/2t</option>
+                            <option value="0.5">1/2</option>
+                            <option value="0.375">1/4d</option>
+                            <option value="0.3333">1/4t</option>
+                            <option value="0.25" selected>1/4</option>
+                            <option value="0.1875">1/8d</option>
+                            <option value="0.1667">1/8t</option>
+                            <option value="0.125">1/8</option>
+                            <option value="0.09375">1/16d</option>
+                            <option value="0.0833">1/16t</option>
+                            <option value="0.0625">1/16</option>
+                            <option value="0.03125">1/32</option>
+                          </select>
+                      </div>
+                      <div class="control-row"> <label for="delayFeedback">Feedback:</label> <input type="range" id="delayFeedback" min="0" max="0.95" step="0.01" value="0.4"> <span class="value-display" id="delayFeedbackValue">0.40</span> </div>
+                      <div class="control-row"> <label for="delayMix">Mix:</label> <input type="range" id="delayMix" min="0" max="1" step="0.01" value="0.35"> <span class="value-display" id="delayMixValue">0.35</span> </div>
+                      <div class="control-row"> <label>Ping-Pong:</label> <button id="delayPingPongToggleBtn" class="toggle-button">OFF</button> </div>
                   </div>
-                  <div>
-                      <div class="control-row"> <strong>Reverb</strong> <button id="reverbToggleBtn" class="toggle-button active" disabled>ON</button> </div>
-                      <div class="control-row"> <label>PreDelay:</label> <input type="range" id="reverbPreDelay" min="0" max="0.2" step="0.001" value="0.01" disabled> <span class="value-display" id="reverbPreDelayValue">0.010s</span> </div>
-                       <div class="control-row"> <label>Tone:</label> <input type="range" id="reverbTone" min="1000" max="20000" step="10" value="8000" data-log="true" disabled> <span class="value-display" id="reverbToneValue">8000 Hz</span> </div>
-                      <div class="control-row"> <label>Mix:</label> <input type="range" id="reverbMix" min="0" max="1" step="0.01" value="0.25" disabled> <span class="value-display" id="reverbMixValue">0.25</span> </div>
+                  <div class="sub-group">
+                      <div class="sub-group-header"> Reverb <button id="reverbToggleBtn" class="toggle-button active" disabled>ON</button> </div>
+                      <div class="control-row"> <label for="reverbPreDelay">PreDelay:</label> <input type="range" id="reverbPreDelay" min="0" max="0.2" step="0.001" value="0.01" disabled> <span class="value-display" id="reverbPreDelayValue">0.010s</span> </div>
+                       <div class="control-row"> <label for="reverbTone">Tone:</label> <input type="range" id="reverbTone" min="1000" max="20000" step="10" value="8000" data-log="true" disabled> <span class="value-display" id="reverbToneValue">8000 Hz</span> </div>
+                      <div class="control-row"> <label for="reverbMix">Mix:</label> <input type="range" id="reverbMix" min="0" max="1" step="0.01" value="0.25" disabled> <span class="value-display" id="reverbMixValue">0.25</span> </div>
                        <div class="control-row" style="font-size: 0.8em; justify-content: center; color: #888;" id="reverbLoadingStatus"> Loading IR... </div>
                   </div>
               </div>
         </div>
 
         <!-- Transport -->
-        <div class="transport"> <button id="playBtn">Play</button> <button id="stopBtn" disabled>Stop</button> <button id="randomizeBtn">Randomize Sequencer</button> <button id="randomSynthBtn">Randomize Synth</button> <button id="savePresetBtn">Save Preset</button> <button id="loadPresetBtn">Load Preset</button> <input type="file" id="loadFileInput" accept=".skrtz,.json"> <button id="exportWavBtn">Export to WAV</button> <label>BPM: <input type="number" id="bpm" value="120" min="40" max="300"></label> </div>
+        <div class="transport">
+            <button id="playBtn">Play</button>
+            <button id="stopBtn" disabled>Stop</button>
+            <button id="randomizeBtn">Randomize Sequencer</button>
+            <button id="randomSynthBtn">Randomize Synth</button>
+            <button id="savePresetBtn">Save Preset</button>
+            <button id="loadPresetBtn">Load Preset</button>
+            <input type="file" id="loadFileInput" accept=".skrtz,.json">
+            <button id="exportWavBtn">Export to WAV</button>
+            <label for="bpm">BPM: <input type="number" id="bpm" value="120" min="40" max="300"></label>
+            <label for="sequencerLength">Steps: <input type="number" id="sequencerLength" value="16" min="3" max="32"></label>
+        </div>
+        
         <!-- Sequencer -->
         <div class="sequencer-container"> <div id="sequencer" class="sequencer"></div> </div>
+        
         <!-- Velocity -->
         <div class="velocity-container" id="velocityContainer"></div>
     </div>
 
-    <footer> <p>Kretzonizer v3.11</p> </footer>
+    <footer> <p>Kretzonizer v3.8</p> </footer>
 
     <script>
-        function createSyntheticImpulse(ctx){const sr=ctx.sampleRate;const dur=1.8,dec=2.5;const len=Math.ceil(sr*dur);if(len<=0)return null;const imp=ctx.createBuffer(2,len,sr);const l=imp.getChannelData(0),r=imp.getChannelData(1);for(let i=0;i<len;i++){const n=i/len,e=Math.pow(1-n,dec);l[i]=(Math.random()*2-1)*e*(0.6+Math.random()*0.4);r[i]=(Math.random()*2-1)*e*(0.6+Math.random()*0.4);}console.log("Synth IR generated.");return imp;}
+        function createSyntheticImpulse(ctx) {
+            const sr = ctx.sampleRate;
+            const dur = 1.8, dec = 2.5;
+            const len = Math.ceil(sr * dur);
+            if (len <= 0) return null;
+            const imp = ctx.createBuffer(2, len, sr);
+            const l = imp.getChannelData(0), r = imp.getChannelData(1);
+            for (let i = 0; i < len; i++) {
+                const n = i / len, e = Math.pow(1 - n, dec);
+                l[i] = (Math.random() * 2 - 1) * e * (0.6 + Math.random() * 0.4);
+                r[i] = (Math.random() * 2 - 1) * e * (0.6 + Math.random() * 0.4);
+            }
+            return imp;
+        }
 
         class StepSequencer {
             constructor() {
-                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                this.isPlaying = false; this.currentStep = 0;
-                this.steps = this.createDefaultSteps();
-                this.tempo = 120; this.stepInterval = (60 / this.tempo) / 4;
-                this.notes = this.generateNotes(); this.activeSources = [];
-                this.impulseBuffer = null; this.delayEnabled = true; this.reverbEnabled = true;
-                this.portamentoEnabled = false; this.portamentoTime = 0.1;
-                this.lastPlayedFrequency = null; this.logBase = 1000;
-                this.isNoteDragging = false; this.isVelocityDragging = false;
-                this.draggedNoteIndex = -1; this.draggedVelocityIndex = -1;
-                this.dragStartY = 0; this.dragStartNoteIndex = 0; this.dragStartVelocity = 0;
-                this.pwmNodes = { osc1: null, osc2: null };
-
-                // --- New Enabled Flags ---
+                this.audioContext = new(window.AudioContext || window.webkitAudioContext)();
+                this.isPlaying = false;
+                this.currentStep = 0;
+                this.sequencerLength = 16;
+                this.steps = this.createDefaultSteps(this.sequencerLength);
+                this.tempo = 120;
+                this.stepInterval = (60 / this.tempo) / 4;
+                this.notes = this.generateNotes();
+                this.activeVoices = new Map();
+                this.lastNoteId = 0;
+                this.impulseBuffer = null;
+                this.delayEnabled = true;
+                this.delayPingPong = false; // New delay property
+                this.reverbEnabled = true;
+                this.portamentoEnabled = false;
+                this.portamentoTime = 0.1;
+                this.logBase = 1000;
+                this.isNoteDragging = false;
+                this.isVelocityDragging = false;
+                this.draggedNoteIndex = -1;
+                this.draggedVelocityIndex = -1;
+                this.dragStartY = 0;
+                this.dragStartNoteIndex = 0;
+                this.dragStartVelocity = 0;
                 this.osc1PwEnabled = true;
                 this.osc2PwEnabled = true;
                 this.lfoEnabled = true;
                 this.pitchEnvEnabled = true;
                 this.filterEnvEnabled = true;
-                // --- End New Flags ---
 
-                // UI Element References
-                this.lfoRateSlider = document.getElementById('lfoRate'); this.lfoAmountSlider = document.getElementById('lfoAmount');
-                this.lfoTargetSelect = document.getElementById('lfoTarget'); this.lfoWaveformSelect = document.getElementById('lfoWaveform');
-                this.portaTimeSlider = document.getElementById('portaTime'); this.portaToggleBtn = document.getElementById('portaToggleBtn');
-
-                this.setupAudio(); this.loadImpulseResponse();
-                this.initializeStepsUI(); this.initializeVelocityUI();
-                this.setupControls(); this.setupWindowListeners();
+                this.setupAudio();
+                this.loadImpulseResponse();
+                this.initializeStepsUI();
+                this.initializeVelocityUI();
+                this.setupControls();
+                this.setupWindowListeners();
                 this.updateAllDisplays();
             }
 
-            // --- Utilities ---
-            createDefaultSteps(){const d=[];for(let i=0;i<16;i++)d.push({active:false,note:'C3',velocity:100});return d;}
-            valueToLog(v,min,max){const mnL=Math.log(min||1)/Math.log(this.logBase);const mxL=Math.log(max)/Math.log(this.logBase);const rng=max-min;if(rng===0)return min;const sc=(mxL-mnL)/rng;return Math.max(min,Math.min(max,Math.pow(this.logBase,mnL+sc*(v-min))));}
-            logToValue(lv,min,max){const mnL=Math.log(min||1)/Math.log(this.logBase);const mxL=Math.log(max)/Math.log(this.logBase);const rng=max-min;if(rng===0)return min; const sc=(mxL-mnL)/rng; if(sc===0)return min;return Math.max(min,Math.min(max,min+(Math.log(lv)/Math.log(this.logBase)-mnL)/sc));}
-            generateNotes(){const n={};const nn=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];for(let o=-2;o<=6;o++){nn.forEach((nt,i)=>{const f=440*Math.pow(2,((o-4)*12+i-9)/12);n[`${nt}${o}`]=f;});}return n;}
-            createShaperCurve(amount){const k=typeof amount==='number'?amount:0;const n=4096;const c=new Float32Array(n);const d=Math.PI/180;for(let i=0;i<n;++i){const x=i*2/n-1;c[i]=(3+k)*x*20*d/(Math.PI+k*Math.abs(x));}return c;}
+            createDefaultSteps(length) { const d = []; for (let i = 0; i < length; i++) d.push({ active: false, note: 'C3', velocity: 100 }); return d; }
+            valueToLog(v, min, max) { const mnL = Math.log(min || 1) / Math.log(this.logBase); const mxL = Math.log(max) / Math.log(this.logBase); const rng = max - min; if (rng === 0) return min; const sc = (mxL - mnL) / rng; return Math.max(min, Math.min(max, Math.pow(this.logBase, mnL + sc * (v - min)))); }
+            generateNotes() { const n = {}; const nn = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']; for (let o = -2; o <= 6; o++) { nn.forEach((nt, i) => { const f = 440 * Math.pow(2, ((o - 4) * 12 + i - 9) / 12); n[`${nt}${o}`] = f; }); } return n; }
+            createShaperCurve(amount) { const k = typeof amount === 'number' ? amount : 0; const n = 4096; const c = new Float32Array(n); const d = Math.PI / 180; for (let i = 0; i < n; ++i) { const x = i * 2 / n - 1; c[i] = (3 + k) * x * 20 * d / (Math.PI + k * Math.abs(x)); } return c; }
+            
+            setupAudio() {
+                this.filter = this.audioContext.createBiquadFilter();
+                this.mainGain = this.audioContext.createGain();
+                this.mainGain.connect(this.audioContext.destination);
+                
+                this.delayInputGain = this.audioContext.createGain();
+                this.delayDryGain = this.audioContext.createGain();
+                this.delayWetGain = this.audioContext.createGain();
+                this.delaySplitter = this.audioContext.createChannelSplitter(2);
+                this.delayMerger = this.audioContext.createChannelMerger(2);
+                this.delayL = this.audioContext.createDelay(5.0);
+                this.delayR = this.audioContext.createDelay(5.0);
+                this.feedbackL = this.audioContext.createGain();
+                this.feedbackR = this.audioContext.createGain();
+                
+                this.reverbPreDelayNode = this.audioContext.createDelay(0.5);
+                this.reverbConvolver = this.audioContext.createConvolver();
+                this.reverbToneFilter = this.audioContext.createBiquadFilter();
+                this.reverbWetGain = this.audioContext.createGain();
 
-            // --- Audio Setup ---
-            setupAudio() { /* (Unchanged) */ this.filter=this.audioContext.createBiquadFilter();this.filter.type='lowpass';this.filter.frequency.value=this.valueToLog(5000,20,20000);this.filter.Q.value=5; this.delayNode=this.audioContext.createDelay(2.0);this.delayFeedbackGain=this.audioContext.createGain();this.delayWetGain=this.audioContext.createGain();this.delayDryGain=this.audioContext.createGain();this.delayInputGain=this.audioContext.createGain(); this.reverbPreDelayNode=this.audioContext.createDelay(0.5);this.reverbConvolver=this.audioContext.createConvolver();this.reverbToneFilter=this.audioContext.createBiquadFilter();this.reverbToneFilter.type='lowpass';this.reverbToneFilter.frequency.value=this.valueToLog(8000,1000,20000);this.reverbToneFilter.Q.value=0.5;this.reverbWetGain=this.audioContext.createGain(); this.mainGain=this.audioContext.createGain();this.mainGain.gain.value=0.7; this.filter.connect(this.delayInputGain); this.delayInputGain.connect(this.delayNode);this.delayNode.connect(this.delayWetGain);this.delayNode.connect(this.delayFeedbackGain);this.delayFeedbackGain.connect(this.delayNode);this.delayInputGain.connect(this.delayDryGain); this.delayWetGain.connect(this.reverbPreDelayNode);this.delayDryGain.connect(this.reverbPreDelayNode); this.reverbPreDelayNode.connect(this.mainGain); this.reverbPreDelayNode.connect(this.reverbConvolver); this.reverbConvolver.connect(this.reverbToneFilter);this.reverbToneFilter.connect(this.reverbWetGain);this.reverbWetGain.connect(this.mainGain); this.mainGain.connect(this.audioContext.destination); this.updateDelaySettings();this.updateReverbSettings(); }
-            loadImpulseResponse(){ /* (Unchanged) */ try{this.impulseBuffer=createSyntheticImpulse(this.audioContext);if(this.impulseBuffer){this.reverbConvolver.buffer=this.impulseBuffer;console.log("Synth IR assigned.");document.getElementById('reverbToggleBtn').disabled=false;document.getElementById('reverbMix').disabled=false;document.getElementById('reverbPreDelay').disabled=false;document.getElementById('reverbTone').disabled=false;document.getElementById('reverbLoadingStatus').textContent="Ready (Synthetic)";document.getElementById('reverbLoadingStatus').style.color='#4CAF50';this.updateReverbSettings();}else{throw new Error("Synth IR creation failed.");}}catch(error){console.error("IR Error:",error);document.getElementById('reverbLoadingStatus').textContent="IR Error!";document.getElementById('reverbLoadingStatus').style.color='red';this.reverbEnabled=false;const btn=document.getElementById('reverbToggleBtn');btn.disabled=true;btn.classList.remove('active');btn.textContent='OFF';document.getElementById('reverbMix').disabled=true;document.getElementById('reverbPreDelay').disabled=true;document.getElementById('reverbTone').disabled=true;this.updateReverbSettings();}}
-            updateDelaySettings(){const n=this.audioContext.currentTime;const t=parseFloat(document.getElementById('delayTime').value);const f=parseFloat(document.getElementById('delayFeedback').value);const m=parseFloat(document.getElementById('delayMix').value);this.delayNode.delayTime.setTargetAtTime(t,n,0.01);this.delayFeedbackGain.gain.setTargetAtTime(this.delayEnabled?f:0,n,0.01);const w=this.delayEnabled?m:0;const d=1.0-w;this.delayWetGain.gain.setTargetAtTime(w,n,0.01);this.delayDryGain.gain.setTargetAtTime(d,n,0.01);this.updateDisplay('delayTimeValue',t,'s',2);this.updateDisplay('delayFeedbackValue',f,'',2);this.updateDisplay('delayMixValue',m,'',2);}
-            updateReverbSettings(){const n=this.audioContext.currentTime;const pD=parseFloat(document.getElementById('reverbPreDelay').value);const tF=parseFloat(document.getElementById('reverbTone').value);const m=parseFloat(document.getElementById('reverbMix').value);this.reverbPreDelayNode.delayTime.setTargetAtTime(pD,n,0.01);const tL=this.valueToLog(tF,1000,20000);this.reverbToneFilter.frequency.setTargetAtTime(tL,n,0.01);const wL=this.reverbEnabled&&this.impulseBuffer?m:0;this.reverbWetGain.gain.setTargetAtTime(wL,n,0.01);this.updateDisplay('reverbPreDelayValue',pD,'s',3);this.updateDisplay('reverbToneValue',tF,' Hz',0);this.updateDisplay('reverbMixValue',m,'',2);}
+                // Connect Main Signal Path
+                this.filter.connect(this.delayInputGain);
+                this.delayInputGain.connect(this.delayDryGain);
+                this.delayInputGain.connect(this.delayWetGain);
+                this.delayDryGain.connect(this.reverbPreDelayNode);
+                this.delayWetGain.connect(this.delaySplitter);
 
-            // --- UI Init & Updates ---
-            initializeStepsUI(){const s=document.getElementById('sequencer');const an=Object.keys(this.notes);s.innerHTML='';for(let i=0;i<16;i++){const st=document.createElement('button');st.className='step';st.dataset.index=i;const nd=document.createElement('div');nd.className='note-display';st.appendChild(nd);st.addEventListener('mousedown',(e)=>{if(e.button!==0)return;const idx=parseInt(e.currentTarget.dataset.index);if(!this.steps[idx].active){this.steps[idx].active=true;e.currentTarget.classList.add('active');this.updateNoteDisplay(idx);}this.isNoteDragging=true;this.draggedNoteIndex=idx;this.dragStartY=e.clientY;if(!this.steps[idx].note)this.steps[idx].note='C3';this.dragStartNoteIndex=an.indexOf(this.steps[idx].note);e.preventDefault();});st.addEventListener('contextmenu',(e)=>{e.preventDefault();const idx=parseInt(e.currentTarget.dataset.index);this.steps[idx].active=false;e.currentTarget.classList.remove('active');this.updateNoteDisplay(idx);});st.addEventListener('dblclick',(e)=>{e.preventDefault();const idx=parseInt(e.currentTarget.dataset.index);this.steps[idx].active=!this.steps[idx].active;e.currentTarget.classList.toggle('active');this.updateNoteDisplay(idx);});s.appendChild(st);this.updateNoteDisplay(i);}}
-            initializeVelocityUI(){const vc=document.getElementById('velocityContainer');vc.innerHTML='';for(let i=0;i<16;i++){const vs=document.createElement('div');vs.className='velocity-step';vs.dataset.index=i;const vv=document.createElement('div');vv.className='velocity-value';vs.appendChild(vv);const uvd=()=>{if(this.steps[i])vv.textContent=String(this.steps[i].velocity);};vs.addEventListener('mousedown',(e)=>{if(e.button!==0)return;const idx=parseInt(e.currentTarget.dataset.index);this.isVelocityDragging=true;this.draggedVelocityIndex=idx;this.dragStartY=e.clientY;this.dragStartVelocity=this.steps[idx].velocity;e.currentTarget.classList.add('active');e.preventDefault();});vc.appendChild(vs);uvd();}}
-            setupWindowListeners(){document.addEventListener('mousemove',(e)=>{if(this.isNoteDragging&&this.draggedNoteIndex>=0){const i=this.draggedNoteIndex;const an=Object.keys(this.notes);const dY=this.dragStartY-e.clientY;const sm=Math.floor(dY/8);let nI=this.dragStartNoteIndex+sm;nI=Math.max(0,Math.min(nI,an.length-1));if(this.steps[i].note!==an[nI]){this.steps[i].note=an[nI];this.updateNoteDisplay(i);}}else if(this.isVelocityDragging&&this.draggedVelocityIndex>=0){const i=this.draggedVelocityIndex;const dY=this.dragStartY-e.clientY;const of=Math.floor(dY/1.5);let nV=this.dragStartVelocity+of;nV=Math.max(0,Math.min(127,nV));if(this.steps[i].velocity!==nV){this.steps[i].velocity=nV;const vs=document.querySelector(`.velocity-step[data-index='${i}']`);const vv=vs?.querySelector('.velocity-value');if(vv)vv.textContent=String(nV);}}});window.addEventListener('mouseup',(e)=>{if(e.button===0){if(this.isNoteDragging){this.isNoteDragging=false;this.draggedNoteIndex=-1;}if(this.isVelocityDragging){this.isVelocityDragging=false;const vs=document.querySelector(`.velocity-step[data-index='${this.draggedVelocityIndex}']`);if(vs)vs.classList.remove('active');this.draggedVelocityIndex=-1;}}});document.addEventListener('contextmenu',(e)=>{if(this.isNoteDragging||this.isVelocityDragging)e.preventDefault();});}
-            redrawSequencerUI(){const se=document.querySelectorAll('#sequencer .step');if(se.length!==16||!this.steps||this.steps.length!==16)return;for(let i=0;i<16;i++)this.updateNoteDisplay(i);}
-            redrawVelocityUI(){const vs=document.querySelectorAll('#velocityContainer .velocity-step');if(vs.length!==16||!this.steps||this.steps.length!==16)return;for(let i=0;i<16;i++){const vv=vs[i]?.querySelector('.velocity-value');if(vv&&this.steps[i])vv.textContent=String(this.steps[i].velocity);}}
-            updateNoteDisplay(idx){const se=document.querySelectorAll('.step');if(!se[idx]||!this.steps[idx])return;const sl=se[idx];const nd=sl.querySelector('.note-display');const{active,note}=this.steps[idx];if(nd)nd.textContent=(active&&note)?note:(note?`(${note})`:'');sl.classList.toggle('active',active);}
-            updateDisplay(id,val,u='',dp=2){const d=document.getElementById(id);if(!d)return;let v=Number(val);if(u===' Hz'){if(v>=1000)d.textContent=`${(v/1000).toFixed(1)} kHz`;else d.textContent=`${v.toFixed(0)}${u}`;}else if(typeof val==='string'&&u==='')d.textContent=val;else d.textContent=`${v.toFixed(dp)}${u}`;}
-            updateAllDisplays(){const e=[{id:'waveform1'},{id:'waveform2'},{id:'lfoTarget'},{id:'lfoWaveform'},{id:'detune1',display:'detune1Value',unit:' ct',decimals:0},{id:'octave1',display:'octave1Value',unit:' oct',decimals:0},{id:'pulseWidth1',display:'pulseWidth1Value',unit:'',decimals:2},{id:'detune2',display:'detune2Value',unit:' ct',decimals:0},{id:'octave2',display:'octave2Value',unit:' oct',decimals:0},{id:'pulseWidth2',display:'pulseWidth2Value',unit:'',decimals:2},{id:'oscMix',display:'oscMixValue',unit:'',decimals:2,format:(v)=>`${Math.round((1-v)*10)}:${Math.round(v*10)}`},{id:'masterVolume',display:'masterVolumeValue',unit:'',decimals:2},{id:'portaTime',display:'portaTimeValue',unit:'s',decimals:3},{id:'cutoff',display:'cutoffValue',unit:' Hz',decimals:0,isLog:true},{id:'resonance',display:'resonanceValue',unit:'',decimals:1},{id:'fAttack',display:'fAttackValue',unit:'s',decimals:3},{id:'fDecay',display:'fDecayValue',unit:'s',decimals:3},{id:'fSustain',display:'fSustainValue',unit:'',decimals:2},{id:'fRelease',display:'fReleaseValue',unit:'s',decimals:3},{id:'fAmount',display:'fAmountValue',unit:'',decimals:0},{id:'attack',display:'attackValue',unit:'s',decimals:3},{id:'decay',display:'decayValue',unit:'s',decimals:3},{id:'sustain',display:'sustainValue',unit:'',decimals:2},{id:'release',display:'releaseValue',unit:'s',decimals:3},{id:'lfoRate',display:'lfoRateValue',unit:' Hz',decimals:1},{id:'lfoAmount',display:'lfoAmountValue',unit:'',decimals:0},{id:'pAttack',display:'pAttackValue',unit:'s',decimals:3},{id:'pDecay',display:'pDecayValue',unit:'s',decimals:3},{id:'pSustain',display:'pSustainValue',unit:'',decimals:2},{id:'pRelease',display:'pReleaseValue',unit:'s',decimals:3},{id:'pAmount',display:'pAmountValue',unit:' cents',decimals:0},{id:'delayTime',display:'delayTimeValue',unit:'s',decimals:2},{id:'delayFeedback',display:'delayFeedbackValue',unit:'',decimals:2},{id:'delayMix',display:'delayMixValue',unit:'',decimals:2},{id:'reverbPreDelay',display:'reverbPreDelayValue',unit:'s',decimals:3},{id:'reverbTone',display:'reverbToneValue',unit:' Hz',decimals:0,isLog:true},{id:'reverbMix',display:'reverbMixValue',unit:'',decimals:2},{id:'bpm',isNum:true}];e.forEach(ei=>{const i=document.getElementById(ei.id);if(i){if(ei.isNum||i.type==='range'){let v=parseFloat(i.value);if(ei.format){const d=document.getElementById(ei.display);if(d)d.textContent=ei.format(v);}else if(ei.display){this.updateDisplay(ei.display,v,ei.unit,ei.decimals);}}}});const dt=document.getElementById('delayToggleBtn');dt.classList.toggle('active',this.delayEnabled);dt.textContent=this.delayEnabled?'ON':'OFF';const rt=document.getElementById('reverbToggleBtn');rt.classList.toggle('active',this.reverbEnabled&&this.impulseBuffer&&!rt.disabled);rt.textContent=(this.reverbEnabled&&this.impulseBuffer&&!rt.disabled)?'ON':'OFF';const pt=this.portaToggleBtn;pt.classList.toggle('active',this.portamentoEnabled);pt.textContent=this.portamentoEnabled?'ON':'OFF';
-                 // Update new toggles
-                 document.getElementById('osc1PwToggleBtn')?.classList.toggle('active', this.osc1PwEnabled);
-                 document.getElementById('osc2PwToggleBtn')?.classList.toggle('active', this.osc2PwEnabled);
-                 document.getElementById('lfoToggleBtn')?.classList.toggle('active', this.lfoEnabled);
-                 document.getElementById('pitchEnvToggleBtn')?.classList.toggle('active', this.pitchEnvEnabled);
-                 document.getElementById('filterEnvToggleBtn')?.classList.toggle('active', this.filterEnvEnabled);
+                // Stereo Delay Path
+                this.delaySplitter.connect(this.delayL, 0);
+                this.delaySplitter.connect(this.delayR, 1);
+                this.delayL.connect(this.feedbackL);
+                this.delayR.connect(this.feedbackR);
+                this.updateDelayRouting(); // Handles ping-pong setup
+                this.delayL.connect(this.delayMerger, 0, 0);
+                this.delayR.connect(this.delayMerger, 0, 1);
+                this.delayMerger.connect(this.reverbPreDelayNode);
+
+                // Reverb Path
+                this.reverbPreDelayNode.connect(this.mainGain);
+                this.reverbPreDelayNode.connect(this.reverbConvolver);
+                this.reverbConvolver.connect(this.reverbToneFilter);
+                this.reverbToneFilter.connect(this.reverbWetGain);
+                this.reverbWetGain.connect(this.mainGain);
+
+                this.updateAudioSettings();
+            }
+            
+            updateAudioSettings() {
+                this.filter.frequency.value = this.valueToLog(parseFloat(document.getElementById('cutoff').value), 20, 20000);
+                this.filter.Q.value = parseFloat(document.getElementById('resonance').value);
+                this.mainGain.gain.value = parseFloat(document.getElementById('masterVolume').value);
+                this.reverbToneFilter.type = 'lowpass';
+                this.reverbToneFilter.frequency.value = this.valueToLog(parseFloat(document.getElementById('reverbTone').value), 1000, 20000);
+                this.reverbToneFilter.Q.value = 0.5;
+                this.updateDelaySettings();
+                this.updateReverbSettings();
             }
 
+            loadImpulseResponse() {
+                try {
+                    this.impulseBuffer = createSyntheticImpulse(this.audioContext);
+                    if (this.impulseBuffer) {
+                        this.reverbConvolver.buffer = this.impulseBuffer;
+                        document.getElementById('reverbToggleBtn').disabled = false;
+                        document.getElementById('reverbMix').disabled = false;
+                        document.getElementById('reverbPreDelay').disabled = false;
+                        document.getElementById('reverbTone').disabled = false;
+                        document.getElementById('reverbLoadingStatus').textContent = "Ready";
+                        document.getElementById('reverbLoadingStatus').style.color = '#4CAF50';
+                        this.updateReverbSettings();
+                    }
+                } catch (error) {
+                    console.error("IR Error:", error);
+                    document.getElementById('reverbLoadingStatus').textContent = "IR Error!";
+                    document.getElementById('reverbLoadingStatus').style.color = 'red';
+                    this.reverbEnabled = false;
+                    const btn = document.getElementById('reverbToggleBtn');
+                    btn.disabled = true; btn.classList.remove('active'); btn.textContent = 'OFF';
+                    document.getElementById('reverbMix').disabled = true; document.getElementById('reverbPreDelay').disabled = true; document.getElementById('reverbTone').disabled = true;
+                }
+            }
+            
+            updateDelaySettings() {
+                const now = this.audioContext.currentTime;
+                const feedback = parseFloat(document.getElementById('delayFeedback').value);
+                const mix = parseFloat(document.getElementById('delayMix').value);
+                
+                const timeValue = parseFloat(document.getElementById('delayTimeSync').value);
+                const beatDuration = 60.0 / this.tempo;
+                const delayTime = beatDuration * timeValue;
+
+                this.delayL.delayTime.setTargetAtTime(delayTime, now, 0.01);
+                this.delayR.delayTime.setTargetAtTime(delayTime, now, 0.01);
+                this.feedbackL.gain.setTargetAtTime(feedback, now, 0.01);
+                this.feedbackR.gain.setTargetAtTime(feedback, now, 0.01);
+                this.delayWetGain.gain.setTargetAtTime(this.delayEnabled ? mix : 0, now, 0.01);
+                this.delayDryGain.gain.setTargetAtTime(1.0 - (this.delayEnabled ? mix : 0), now, 0.01);
+            }
+
+            updateDelayRouting() {
+                this.feedbackL.disconnect();
+                this.feedbackR.disconnect();
+                if (this.delayPingPong) {
+                    this.feedbackL.connect(this.delayR);
+                    this.feedbackR.connect(this.delayL);
+                } else {
+                    this.feedbackL.connect(this.delayL);
+                    this.feedbackR.connect(this.delayR);
+                }
+            }
+
+            updateReverbSettings() { const now = this.audioContext.currentTime; const preDelay = parseFloat(document.getElementById('reverbPreDelay').value); const mix = parseFloat(document.getElementById('reverbMix').value); this.reverbPreDelayNode.delayTime.setTargetAtTime(preDelay, now, 0.01); this.reverbWetGain.gain.setTargetAtTime(this.reverbEnabled && this.impulseBuffer ? mix : 0, now, 0.01); }
+
+            initializeStepsUI() { const sequencer = document.getElementById('sequencer'); const allNotes = Object.keys(this.notes); sequencer.innerHTML = ''; sequencer.style.setProperty('--sequencer-steps', this.sequencerLength); for (let i = 0; i < this.sequencerLength; i++) { const step = document.createElement('button'); step.className = 'step'; step.dataset.index = i; const noteDisplay = document.createElement('div'); noteDisplay.className = 'note-display'; step.appendChild(noteDisplay); step.addEventListener('mousedown', (e) => { if (e.button !== 0) return; const idx = parseInt(e.currentTarget.dataset.index); if (!this.steps[idx].active) { this.steps[idx].active = true; e.currentTarget.classList.add('active'); this.updateNoteDisplay(idx); } this.isNoteDragging = true; this.draggedNoteIndex = idx; this.dragStartY = e.clientY; if (!this.steps[idx].note) this.steps[idx].note = 'C3'; this.dragStartNoteIndex = allNotes.indexOf(this.steps[idx].note); e.preventDefault(); }); step.addEventListener('contextmenu', (e) => { e.preventDefault(); const idx = parseInt(e.currentTarget.dataset.index); this.steps[idx].active = false; e.currentTarget.classList.remove('active'); this.updateNoteDisplay(idx); }); step.addEventListener('dblclick', (e) => { e.preventDefault(); const idx = parseInt(e.currentTarget.dataset.index); this.steps[idx].active = !this.steps[idx].active; e.currentTarget.classList.toggle('active'); this.updateNoteDisplay(idx); }); sequencer.appendChild(step); this.updateNoteDisplay(i); } }
+            initializeVelocityUI() { const velContainer = document.getElementById('velocityContainer'); velContainer.innerHTML = ''; velContainer.style.setProperty('--sequencer-steps', this.sequencerLength); for (let i = 0; i < this.sequencerLength; i++) { const velStep = document.createElement('div'); velStep.className = 'velocity-step'; velStep.dataset.index = i; const velValue = document.createElement('div'); velValue.className = 'velocity-value'; velStep.appendChild(velValue); const updateVelDisplay = () => { if (this.steps[i]) velValue.textContent = String(this.steps[i].velocity); }; velStep.addEventListener('mousedown', (e) => { if (e.button !== 0) return; const idx = parseInt(e.currentTarget.dataset.index); this.isVelocityDragging = true; this.draggedVelocityIndex = idx; this.dragStartY = e.clientY; this.dragStartVelocity = this.steps[i].velocity; e.currentTarget.classList.add('active'); e.preventDefault(); }); velContainer.appendChild(velStep); updateVelDisplay(); } }
+            setupWindowListeners() { document.addEventListener('mousemove', (e) => { if (this.isNoteDragging && this.draggedNoteIndex >= 0) { const i = this.draggedNoteIndex; const allNotes = Object.keys(this.notes); const dy = this.dragStartY - e.clientY; const stepsMoved = Math.floor(dy / 8); let newIndex = this.dragStartNoteIndex + stepsMoved; newIndex = Math.max(0, Math.min(newIndex, allNotes.length - 1)); if (this.steps[i].note !== allNotes[newIndex]) { this.steps[i].note = allNotes[newIndex]; this.updateNoteDisplay(i); } } else if (this.isVelocityDragging && this.draggedVelocityIndex >= 0) { const i = this.draggedVelocityIndex; const dy = this.dragStartY - e.clientY; const offset = Math.floor(dy / 1.5); let newVelocity = this.dragStartVelocity + offset; newVelocity = Math.max(0, Math.min(127, newVelocity)); if (this.steps[i].velocity !== newVelocity) { this.steps[i].velocity = newVelocity; const velStep = document.querySelector(`.velocity-step[data-index='${i}']`); const velValue = velStep?.querySelector('.velocity-value'); if (velValue) velValue.textContent = String(newVelocity); } } }); window.addEventListener('mouseup', (e) => { if (e.button === 0) { if (this.isNoteDragging) { this.isNoteDragging = false; this.draggedNoteIndex = -1; } if (this.isVelocityDragging) { this.isVelocityDragging = false; const velStep = document.querySelector(`.velocity-step[data-index='${this.draggedVelocityIndex}']`); if (velStep) velStep.classList.remove('active'); this.draggedVelocityIndex = -1; } } }); document.addEventListener('contextmenu', (e) => { if (this.isNoteDragging || this.isVelocityDragging) e.preventDefault(); }); }
+            
+            redrawSequencerUI() { for (let i = 0; i < this.sequencerLength; i++) { this.updateNoteDisplay(i); } }
+            redrawVelocityUI() { const velSteps = document.querySelectorAll('#velocityContainer .velocity-step'); for (let i = 0; i < this.sequencerLength; i++) { const velValue = velSteps[i]?.querySelector('.velocity-value'); if (velValue && this.steps[i]) { velValue.textContent = String(this.steps[i].velocity); } } }
+            updateNoteDisplay(idx) { const stepEl = document.querySelector(`.step[data-index='${idx}']`); if (!stepEl || !this.steps[idx]) return; const noteDisplay = stepEl.querySelector('.note-display'); const { active, note } = this.steps[idx]; if (noteDisplay) noteDisplay.textContent = (active && note) ? note : (note ? `(${note})` : ''); stepEl.classList.toggle('active', active); }
+            updateDisplay(id, val, unit = '', dp = 2) { const display = document.getElementById(id); if (!display) return; let value = Number(val); if (unit === ' Hz') { if (value >= 1000) display.textContent = `${(value / 1000).toFixed(1)} kHz`; else display.textContent = `${value.toFixed(0)}${unit}`; } else if (typeof val === 'string' && unit === '') { display.textContent = val; } else { display.textContent = `${value.toFixed(dp)}${unit}`; } }
+            
+            updateAllDisplays() {
+                const elements = [
+                    { id: 'pitch1', display: 'pitch1Value', unit: ' st', decimals: 0 }, { id: 'detune1', display: 'detune1Value', unit: ' ct', decimals: 0 }, { id: 'octave1', display: 'octave1Value', unit: ' oct', decimals: 0 }, { id: 'pulseWidth1', display: 'pulseWidth1Value', unit: '', decimals: 2 },
+                    { id: 'pitch2', display: 'pitch2Value', unit: ' st', decimals: 0 }, { id: 'detune2', display: 'detune2Value', unit: ' ct', decimals: 0 }, { id: 'octave2', display: 'octave2Value', unit: ' oct', decimals: 0 }, { id: 'pulseWidth2', display: 'pulseWidth2Value', unit: '', decimals: 2 },
+                    { id: 'oscMix', display: 'oscMixValue', format: (v) => `${Math.round((1 - v) * 10)}:${Math.round(v * 10)}` },
+                    { id: 'masterVolume', display: 'masterVolumeValue', unit: '', decimals: 2 }, { id: 'portaTime', display: 'portaTimeValue', unit: 's', decimals: 3 },
+                    { id: 'cutoff', display: 'cutoffValue', unit: ' Hz', decimals: 0 }, { id: 'resonance', display: 'resonanceValue', unit: '', decimals: 1 },
+                    { id: 'fAttack', display: 'fAttackValue', unit: 's', decimals: 3 }, { id: 'fDecay', display: 'fDecayValue', unit: 's', decimals: 3 }, { id: 'fSustain', display: 'fSustainValue', unit: '', decimals: 2 }, { id: 'fRelease', display: 'fReleaseValue', unit: 's', decimals: 3 }, { id: 'fAmount', display: 'fAmountValue', unit: '', decimals: 0 },
+                    { id: 'attack', display: 'attackValue', unit: 's', decimals: 3 }, { id: 'decay', display: 'decayValue', unit: 's', decimals: 3 }, { id: 'sustain', display: 'sustainValue', unit: '', decimals: 2 }, { id: 'release', display: 'releaseValue', unit: 's', decimals: 3 },
+                    { id: 'lfoRate', display: 'lfoRateValue', unit: ' Hz', decimals: 1 }, { id: 'lfoAmount', display: 'lfoAmountValue', unit: '', decimals: 0 },
+                    { id: 'pAttack', display: 'pAttackValue', unit: 's', decimals: 3 }, { id: 'pDecay', display: 'pDecayValue', unit: 's', decimals: 3 }, { id: 'pSustain', display: 'pSustainValue', unit: '', decimals: 2 }, { id: 'pRelease', display: 'pReleaseValue', unit: 's', decimals: 3 }, { id: 'pAmount', display: 'pAmountValue', unit: ' cents', decimals: 0 },
+                    { id: 'delayFeedback', display: 'delayFeedbackValue', unit: '', decimals: 2 }, { id: 'delayMix', display: 'delayMixValue', unit: '', decimals: 2 },
+                    { id: 'reverbPreDelay', display: 'reverbPreDelayValue', unit: 's', decimals: 3 }, { id: 'reverbTone', display: 'reverbToneValue', unit: ' Hz', decimals: 0 }, { id: 'reverbMix', display: 'reverbMixValue', unit: '', decimals: 2 },
+                ];
+                elements.forEach(elInfo => { const input = document.getElementById(elInfo.id); if (input) { const value = parseFloat(input.value); if (elInfo.format) { const display = document.getElementById(elInfo.display); if (display) display.textContent = elInfo.format(value); } else if (elInfo.display) { this.updateDisplay(elInfo.display, value, elInfo.unit, elInfo.decimals); } } });
+                
+                const updateToggleBtn = (id, isActive, textPrefix = '') => { const btn = document.getElementById(id); if (btn) { btn.classList.toggle('active', isActive); btn.textContent = `${textPrefix}${isActive ? 'ON' : 'OFF'}`; } };
+                updateToggleBtn('delayToggleBtn', this.delayEnabled);
+                updateToggleBtn('delayPingPongToggleBtn', this.delayPingPong, 'P-PONG ');
+                updateToggleBtn('reverbToggleBtn', this.reverbEnabled && this.impulseBuffer && !document.getElementById('reverbToggleBtn').disabled);
+                updateToggleBtn('portaToggleBtn', this.portamentoEnabled);
+                updateToggleBtn('osc1PwToggleBtn', this.osc1PwEnabled, 'PW ');
+                updateToggleBtn('osc2PwToggleBtn', this.osc2PwEnabled, 'PW ');
+                updateToggleBtn('lfoToggleBtn', this.lfoEnabled, 'LFO ');
+                updateToggleBtn('pitchEnvToggleBtn', this.pitchEnvEnabled, 'ENV ');
+                updateToggleBtn('filterEnvToggleBtn', this.filterEnvEnabled, 'ENV ');
+            }
+            
             setupControls() {
-                 // Helper for toggles
-                 const setupToggle = (id, propertyName, btnTextPrefix = '') => {
-                     const btn = document.getElementById(id);
-                     if (btn) {
-                         btn.addEventListener('click', (e) => {
-                             this[propertyName] = !this[propertyName];
-                             e.target.textContent = `${btnTextPrefix}${this[propertyName] ? 'ON' : 'OFF'}`;
-                             e.target.classList.toggle('active', this[propertyName]);
-                             // Maybe trigger audio update if needed, e.g., reverb/delay gain
-                             if (propertyName === 'delayEnabled') this.updateDelaySettings();
-                             if (propertyName === 'reverbEnabled') this.updateReverbSettings();
-                         });
-                     }
-                 };
-
-                 // Transport & Basic
-                 document.getElementById('playBtn').addEventListener('click',()=>this.play()); document.getElementById('stopBtn').addEventListener('click',()=>this.stop()); document.getElementById('randomizeBtn').addEventListener('click',()=>this.randomizeSteps()); document.getElementById('randomSynthBtn').addEventListener('click',()=>this.randomizeSynth()); document.getElementById('exportWavBtn').addEventListener('click',()=>this.exportToWav()); document.getElementById('bpm').addEventListener('change',(e)=>{let t=parseInt(e.target.value)||120;t=Math.max(40,Math.min(300,t));e.target.value=t;this.tempo=t;this.stepInterval=(60/this.tempo)/4;if(this.isPlaying){this.stop();this.play();}});
-                 // Save/Load
-                 document.getElementById('savePresetBtn').addEventListener('click',()=>this.savePreset()); document.getElementById('loadPresetBtn').addEventListener('click',()=>document.getElementById('loadFileInput').click()); document.getElementById('loadFileInput').addEventListener('change',(e)=>this.handleFileLoad(e));
-                 // Osc 1 & 2
-                 document.getElementById('detune1').addEventListener('input',(e)=>this.updateDisplay('detune1Value',e.target.value,' ct',0)); document.getElementById('octave1').addEventListener('input',(e)=>this.updateDisplay('octave1Value',e.target.value,' oct',0)); document.getElementById('pulseWidth1').addEventListener('input',(e)=>this.updateDisplay('pulseWidth1Value',e.target.value,'',2)); setupToggle('osc1PwToggleBtn', 'osc1PwEnabled', 'PW ');
-                 document.getElementById('detune2').addEventListener('input',(e)=>this.updateDisplay('detune2Value',e.target.value,' ct',0)); document.getElementById('octave2').addEventListener('input',(e)=>this.updateDisplay('octave2Value',e.target.value,' oct',0)); document.getElementById('pulseWidth2').addEventListener('input',(e)=>this.updateDisplay('pulseWidth2Value',e.target.value,'',2)); setupToggle('osc2PwToggleBtn', 'osc2PwEnabled', 'PW ');
-                 // Mixer & Master Vol & Portamento
-                 document.getElementById('oscMix').addEventListener('input',(e)=>{const v=parseFloat(e.target.value);this.updateDisplay('oscMixValue',`${Math.round((1-v)*10)}:${Math.round(v*10)}`,'');});
-                 document.getElementById('masterVolume').addEventListener('input',(e)=>{const v=parseFloat(e.target.value);this.mainGain.gain.setTargetAtTime(v,this.audioContext.currentTime,0.01);this.updateDisplay('masterVolumeValue',v,'',2);});
-                 document.getElementById('portaTime').addEventListener('input',(e)=>{this.portamentoTime=parseFloat(e.target.value);this.updateDisplay('portaTimeValue',this.portamentoTime,'s',3);}); setupToggle('portaToggleBtn', 'portamentoEnabled');
-                 // LFO
-                 document.getElementById('lfoRate').addEventListener('input',(e)=>this.updateDisplay('lfoRateValue', e.target.value, ' Hz', 1));
-                 document.getElementById('lfoAmount').addEventListener('input',(e)=>this.updateDisplay('lfoAmountValue', e.target.value, '', 0));
-                 setupToggle('lfoToggleBtn', 'lfoEnabled', 'LFO ');
-                 // Filter
-                 document.getElementById('cutoff').addEventListener('input',(e)=>{const lV=parseFloat(e.target.value);const gV=this.valueToLog(lV,20,20000);this.filter.frequency.setTargetAtTime(gV,this.audioContext.currentTime,0.01);this.updateDisplay('cutoffValue',lV,' Hz',0);});
-                 document.getElementById('resonance').addEventListener('input',(e)=>{const v=parseFloat(e.target.value);this.filter.Q.setTargetAtTime(v,this.audioContext.currentTime,0.01);this.updateDisplay('resonanceValue',v,'',1);});
-                 setupToggle('filterEnvToggleBtn', 'filterEnvEnabled', 'ENV ');
-                 // Envelopes
-                 const se=(id,dId,u,dp=2)=>{document.getElementById(id)?.addEventListener('input',(e)=>this.updateDisplay(dId,e.target.value,u,dp));};
-                 se('attack','attackValue','s',3);se('decay','decayValue','s',3);se('sustain','sustainValue','',2);se('release','releaseValue','s',3);
-                 se('fAttack','fAttackValue','s',3);se('fDecay','fDecayValue','s',3);se('fSustain','fSustainValue','',2);se('fRelease','fReleaseValue','s',3);se('fAmount','fAmountValue','',0);
-                 se('pAttack','pAttackValue','s',3);se('pDecay','pDecayValue','s',3);se('pSustain','pSustainValue','',2);se('pRelease','pReleaseValue','s',3);se('pAmount','pAmountValue',' cents',0);
-                 setupToggle('pitchEnvToggleBtn', 'pitchEnvEnabled', 'ENV ');
-                 // Effects
-                 document.getElementById('delayTime').addEventListener('input',()=>this.updateDelaySettings());document.getElementById('delayFeedback').addEventListener('input',()=>this.updateDelaySettings());document.getElementById('delayMix').addEventListener('input',()=>this.updateDelaySettings()); setupToggle('delayToggleBtn', 'delayEnabled');
-                 document.getElementById('reverbPreDelay').addEventListener('input',()=>this.updateReverbSettings());document.getElementById('reverbTone').addEventListener('input',()=>this.updateReverbSettings());document.getElementById('reverbMix').addEventListener('input',()=>this.updateReverbSettings()); setupToggle('reverbToggleBtn', 'reverbEnabled');
+                const setupToggle = (id, propertyName, updateFn = null) => { const btn = document.getElementById(id); if (btn) { btn.addEventListener('click', () => { this[propertyName] = !this[propertyName]; if (updateFn) this[updateFn](); this.updateAllDisplays(); }); } };
+                const setupParam = (id, updateFn = null) => { const el = document.getElementById(id); if (el) { const eventType = el.tagName === 'SELECT' ? 'change' : 'input'; el.addEventListener(eventType, () => { this.updateAllDisplays(); if (updateFn) updateFn(); }); } };
+                
+                document.getElementById('playBtn').addEventListener('click', () => this.play());
+                document.getElementById('stopBtn').addEventListener('click', () => this.stop());
+                document.getElementById('randomizeBtn').addEventListener('click', () => this.randomizeSteps());
+                document.getElementById('randomSynthBtn').addEventListener('click', () => this.randomizeSynth());
+                document.getElementById('exportWavBtn').addEventListener('click', () => this.exportToWav());
+                document.getElementById('savePresetBtn').addEventListener('click', () => this.savePreset());
+                document.getElementById('loadPresetBtn').addEventListener('click', () => document.getElementById('loadFileInput').click());
+                document.getElementById('loadFileInput').addEventListener('change', (e) => this.handleFileLoad(e));
+                document.getElementById('bpm').addEventListener('change', () => { this.tempo = parseInt(document.getElementById('bpm').value) || 120; this.stepInterval = (60 / this.tempo) / 4; this.updateDelaySettings(); if (this.isPlaying) { this.stop(); this.play(); } });
+                document.getElementById('sequencerLength').addEventListener('change', (e) => this.setSequencerLength(parseInt(e.target.value)));
+                
+                const paramIds = ['pitch1', 'detune1', 'octave1', 'pulseWidth1', 'pitch2', 'detune2', 'octave2', 'pulseWidth2', 'oscMix', 'lfoWaveform', 'lfoRate', 'lfoAmount', 'lfoTarget', 'attack', 'decay', 'sustain', 'release', 'fAttack', 'fDecay', 'fSustain', 'fRelease', 'fAmount', 'pAttack', 'pDecay', 'pSustain', 'pRelease', 'pAmount'];
+                paramIds.forEach(id => setupParam(id));
+                
+                setupParam('waveform1', () => this._updatePwSliderState(1));
+                setupParam('waveform2', () => this._updatePwSliderState(2));
+                setupParam('masterVolume', () => { this.mainGain.gain.value = parseFloat(document.getElementById('masterVolume').value); });
+                setupParam('portaTime', () => { this.portamentoTime = parseFloat(document.getElementById('portaTime').value); });
+                setupParam('cutoff', () => { this.filter.frequency.value = this.valueToLog(parseFloat(document.getElementById('cutoff').value), 20, 20000); });
+                setupParam('resonance', () => { this.filter.Q.value = parseFloat(document.getElementById('resonance').value); });
+                
+                setupParam('delayTimeSync', () => this.updateDelaySettings());
+                setupParam('delayFeedback', () => this.updateDelaySettings());
+                setupParam('delayMix', () => this.updateDelaySettings());
+                setupParam('reverbPreDelay', () => this.updateReverbSettings());
+                setupParam('reverbTone', () => { this.reverbToneFilter.frequency.value = this.valueToLog(parseFloat(document.getElementById('reverbTone').value), 1000, 20000); });
+                setupParam('reverbMix', () => this.updateReverbSettings());
+                
+                setupToggle('osc1PwToggleBtn', 'osc1PwEnabled');
+                setupToggle('osc2PwToggleBtn', 'osc2PwEnabled');
+                setupToggle('portaToggleBtn', 'portamentoEnabled');
+                setupToggle('lfoToggleBtn', 'lfoEnabled');
+                setupToggle('filterEnvToggleBtn', 'filterEnvEnabled');
+                setupToggle('pitchEnvToggleBtn', 'pitchEnvEnabled');
+                setupToggle('delayToggleBtn', 'delayEnabled', 'updateDelaySettings');
+                setupToggle('delayPingPongToggleBtn', 'delayPingPong', 'updateDelayRouting');
+                setupToggle('reverbToggleBtn', 'reverbEnabled', 'updateReverbSettings');
+                
+                this._updatePwSliderState(1);
+                this._updatePwSliderState(2);
+            }
+            
+            _updatePwSliderState(oscNum) {
+                const waveform = document.getElementById(`waveform${oscNum}`).value;
+                const pwSlider = document.getElementById(`pulseWidth${oscNum}`);
+                const pwApplicable = ['pulse', 'square', 'sine'].includes(waveform);
+                pwSlider.disabled = !pwApplicable;
             }
 
-            // --- Playback Logic ---
-            play(){if(this.isPlaying)return;if(this.audioContext.state==='suspended'){this.audioContext.resume().then(()=>{console.log("AC resumed.");this.startPlayback();}).catch(e=>console.error("AC resume failed:",e));}else{this.startPlayback();}}
-            startPlayback(){if(this.isPlaying)return;this.isPlaying=true;this.currentStep=0;this.nextStepTime=this.audioContext.currentTime+0.1;this.stopAllNotes();this.scheduler();document.getElementById('playBtn').textContent='...Playing';document.getElementById('stopBtn').disabled=false;document.getElementById('playBtn').disabled=true;}
-            stop(){if(!this.isPlaying)return;this.isPlaying=false;if(this.timerID){clearTimeout(this.timerID);this.timerID=null;}this.stopAllNotes();document.querySelectorAll('.step.current').forEach(s=>s.classList.remove('current'));document.getElementById('playBtn').textContent='Play';document.getElementById('stopBtn').disabled=true;document.getElementById('playBtn').disabled=false;this.currentStep=0;this.lastPlayedFrequency=null;}
+            play() { if (this.isPlaying) return; if (this.audioContext.state === 'suspended') { this.audioContext.resume().then(() => { console.log("AudioContext resumed."); this.startPlayback(); }).catch(e => console.error("AudioContext resume failed:", e)); } else { this.startPlayback(); } }
+            startPlayback() { if (this.isPlaying) return; this.isPlaying = true; this.currentStep = 0; this.nextStepTime = this.audioContext.currentTime + 0.1; this.scheduler(); document.getElementById('playBtn').textContent = '...Playing'; document.getElementById('stopBtn').disabled = false; document.getElementById('playBtn').disabled = true; }
+            stop() { if (!this.isPlaying) return; this.isPlaying = false; if (this.timerID) { clearTimeout(this.timerID); this.timerID = null; } this.stopAllNotes(); document.querySelectorAll('.step.current').forEach(s => s.classList.remove('current')); document.getElementById('playBtn').textContent = 'Play'; document.getElementById('stopBtn').disabled = true; document.getElementById('playBtn').disabled = false; this.currentStep = 0; }
 
-            // Corrected stopAllNotes
             stopAllNotes() {
-                 const now = this.audioContext.currentTime;
-                 const clearPwm = (pwmNodeSet) => {
-                     if (pwmNodeSet && typeof pwmNodeSet === 'object') {
-                         try { pwmNodeSet.oscA?.disconnect(); } catch(e){}
-                         try { pwmNodeSet.oscB?.disconnect(); } catch(e){}
-                         try { pwmNodeSet.inverter?.disconnect(); } catch(e){}
-                         try { pwmNodeSet.pwDelay?.disconnect(); } catch(e){}
-                     }
-                 };
-                 clearPwm(this.pwmNodes.osc1); clearPwm(this.pwmNodes.osc2);
-                 this.pwmNodes.osc1 = null; this.pwmNodes.osc2 = null;
-
-                 this.activeSources.forEach(si => {
-                     try {
-                         const node = si.node; const gainNode = si.gainNode;
-                         if (gainNode?.gain) { gainNode.gain.cancelScheduledValues(now); gainNode.gain.setTargetAtTime(0, now, 0.015); }
-                         if (node?.stop && (node instanceof OscillatorNode || node instanceof AudioBufferSourceNode || node instanceof DelayNode)) { node.stop(now + 0.05); }
-                         if (node?.disconnect) { node.disconnect(); }
-                         if (gainNode?.disconnect) { gainNode.disconnect(); }
-                     } catch (e) { /* Ignore */ }
-                 });
-                 this.activeSources = [];
+                this.activeVoices.forEach((voice) => {
+                    const now = this.audioContext.currentTime;
+                    voice.ampGain.gain.cancelScheduledValues(now);
+                    voice.ampGain.gain.setTargetAtTime(0, now, 0.015);
+                    voice.nodes.forEach(node => node.stop?.(now + 0.1));
+                });
+                this.activeVoices.clear();
             }
 
-            // --- Scheduler ---
-            nextStepTime=0.0; timerID=null;
-            scheduler(){if(!this.isPlaying)return;const l=0.1;const si=0.05;while(this.nextStepTime<this.audioContext.currentTime+l){this.scheduleStep(this.currentStep,this.nextStepTime);this.nextStepTime+=this.stepInterval;this.currentStep=(this.currentStep+1)%16;}const tUNC=(this.nextStepTime-this.audioContext.currentTime-l)+si;const d=Math.max(si*1000,tUNC*1000);if(this.timerID)clearTimeout(this.timerID);this.timerID=setTimeout(()=>this.scheduler(),d);}
-            scheduleStep(idx,time){const vd=Math.max(0,(time-this.audioContext.currentTime)*1000);setTimeout(()=>{if(!this.isPlaying)return;const s=document.querySelectorAll('.step');s.forEach(el=>el.classList.remove('current'));if(s[idx])s[idx].classList.add('current');},vd);const sd=this.steps[idx];if(sd&&sd.active&&sd.note&&sd.velocity>0){this.playNote(sd.note,sd.velocity,time);}}
+            nextStepTime = 0.0;
+            timerID = null;
+            scheduler() { if (!this.isPlaying) return; const lookahead = 0.2; while (this.nextStepTime < this.audioContext.currentTime + lookahead) { this.scheduleStep(this.currentStep, this.nextStepTime); this.nextStepTime += this.stepInterval; this.currentStep = (this.currentStep + 1) % this.sequencerLength; } this.timerID = setTimeout(() => this.scheduler(), 50); }
+            scheduleStep(idx, time) { const visualDelay = Math.max(0, (time - this.audioContext.currentTime) * 1000); setTimeout(() => { if (!this.isPlaying) return; const steps = document.querySelectorAll('.step'); steps.forEach(el => el.classList.remove('current')); if (steps[idx]) steps[idx].classList.add('current'); }, visualDelay); const stepData = this.steps[idx]; if (stepData?.active && stepData.note && stepData.velocity > 0) { this.playNote(stepData.note, stepData.velocity, time); } }
 
             playNote(noteKey, velocity, time) {
-                 const now = time;
-                 const baseFreqRaw = this.notes[noteKey];
-                 if (!baseFreqRaw) return;
+                const params = this.gatherState();
+                const noteId = this.lastNoteId++;
 
-                 // LFO Setup
-                 const lfoRate=parseFloat(this.lfoRateSlider.value),lfoAmount=parseFloat(this.lfoAmountSlider.value),lfoTarget=this.lfoTargetSelect.value,lfoWaveform=this.lfoWaveformSelect.value;
-                 let noteLfo=null,noteLfoGain=null,noteActiveSources=[];
-                 if(this.lfoEnabled && lfoTarget!=='off' && lfoAmount!==0){ // Check lfoEnabled
-                    noteLfo=this.audioContext.createOscillator(); noteLfoGain=this.audioContext.createGain(); noteLfo.type=lfoWaveform; noteLfo.frequency.setValueAtTime(lfoRate,now); noteLfoGain.gain.setValueAtTime(lfoAmount,now); noteLfo.connect(noteLfoGain); noteLfo.start(now); noteActiveSources.push({node:noteLfo,type:'lfo-osc'},{node:noteLfoGain,gainNode:noteLfoGain,type:'lfo-gain'});
-                 }
-
-                 // Other Params
-                 const o1w=document.getElementById('waveform1').value,d1c=parseFloat(document.getElementById('detune1').value),o1s=parseInt(document.getElementById('octave1').value),pw1=parseFloat(document.getElementById('pulseWidth1').value);
-                 const o2w=document.getElementById('waveform2').value,d2c=parseFloat(document.getElementById('detune2').value),o2s=parseInt(document.getElementById('octave2').value),pw2=parseFloat(document.getElementById('pulseWidth2').value);
-                 const om=parseFloat(document.getElementById('oscMix').value);
-                 const a=Math.max(0.001,parseFloat(document.getElementById('attack').value)),d=Math.max(0.001,parseFloat(document.getElementById('decay').value)),s=parseFloat(document.getElementById('sustain').value),r=Math.max(0.001,parseFloat(document.getElementById('release').value));
-                 const net=now+a+d+r+4.0; const vf=velocity/127;
-                 const fa=Math.max(0.001,parseFloat(document.getElementById('fAttack').value)),fd=Math.max(0.001,parseFloat(document.getElementById('fDecay').value)),fs=parseFloat(document.getElementById('fSustain').value),fr=Math.max(0.001,parseFloat(document.getElementById('fRelease').value)),famt=parseFloat(document.getElementById('fAmount').value);
-                 // Read filter cutoff value from slider (linear) for base calculation
-                 const cutoffSliderVal = parseFloat(document.getElementById('cutoff').value);
-                 const baseCutoff = this.valueToLog(cutoffSliderVal, 20, 20000); // Convert to log for audio param
-
-                 const pa=Math.max(0.001,parseFloat(document.getElementById('pAttack').value)),pd=Math.max(0.001,parseFloat(document.getElementById('pDecay').value)),ps=parseFloat(document.getElementById('pSustain').value),pr=Math.max(0.001,parseFloat(document.getElementById('pRelease').value)),pamt=parseFloat(document.getElementById('pAmount').value);
-                 const ctm=(c)=>Math.pow(2,c/1200);
-
-                 // Frequencies & Portamento
-                 const fq1=baseFreqRaw*Math.pow(2,o1s)*ctm(d1c); const fq2=baseFreqRaw*Math.pow(2,o2s)*ctm(d2c);
-                 const portaTime = this.portamentoEnabled ? Math.max(0.001, this.portamentoTime) : 0;
-                 // Glide only if porta enabled, time > 0, and last note existed and is different
-                 const glide = this.portamentoEnabled && this.lastPlayedFrequency !== null && portaTime > 0 && this.lastPlayedFrequency !== baseFreqRaw;
-                 const startFreq1 = glide ? this.lastPlayedFrequency : fq1; const startFreq2 = glide ? this.lastPlayedFrequency : fq2;
-                 const pitchEnvStartTime = now + (glide ? portaTime : 0); // Delay pitch env start if gliding
-
-                 // Nodes
-                 const ampG=this.audioContext.createGain();ampG.connect(this.filter);noteActiveSources.push({node:ampG,gainNode:ampG,type:'amp-env'});
-
-                 // --- Oscillator 1 ---
-                 let o1g=this.audioContext.createGain();o1g.gain.setValueAtTime(1.0-om,now);o1g.connect(ampG);noteActiveSources.push({node:o1g,gainNode:o1g,type:'osc-gain'});
-                 let o1fp=null; let o1PwmDelayNode=null; let pwmN1=null;
-                 const osc1PwActive = this.osc1PwEnabled && (o1w === 'pulse' || o1w === 'square');
-                 const osc1ShapeActive = this.osc1PwEnabled && (o1w === 'sawtooth' || o1w === 'triangle' || o1w === 'sine');
-
-                 if(o1w==='noise'){let nS=this.createNoiseSource(now,net);nS.connect(o1g);noteActiveSources.push({node:nS,type:'noise'});}
-                 else if(osc1PwActive){ /* PWM/Square */ const oa=this.audioContext.createOscillator();oa.type='sawtooth';const ob=this.audioContext.createOscillator();ob.type='sawtooth';const inv=this.audioContext.createGain();inv.gain.value=-1;const pwd=this.audioContext.createDelay(1.0);const p=1/fq1;const cpw=Math.max(0.01,Math.min(0.99,pw1));let dt=cpw*p;dt=Math.max(1e-5,Math.min(p*0.999,dt));pwd.delayTime.setValueAtTime(dt,now); oa.frequency.setValueAtTime(startFreq1,now);ob.frequency.setValueAtTime(startFreq1,now); if(glide){oa.frequency.exponentialRampToValueAtTime(fq1,now+portaTime);ob.frequency.exponentialRampToValueAtTime(fq1,now+portaTime);} oa.connect(o1g);ob.connect(inv);inv.connect(pwd);pwd.connect(o1g);oa.start(now);oa.stop(net);ob.start(now);ob.stop(net);pwmN1={oa,ob,pwd,inv};noteActiveSources.push({node:oa,type:'pwm-sub'},{node:ob,type:'pwm-sub'},{node:inv,gainNode:inv,type:'pwm-sub'},{node:pwd,type:'pwm-sub'});o1fp=[oa.frequency,ob.frequency];o1PwmDelayNode=pwd;}
-                 else{ /* Sine, Triangle, Sawtooth */ let bO=this.audioContext.createOscillator();bO.type=o1w; bO.frequency.setValueAtTime(startFreq1,now);if(glide){bO.frequency.exponentialRampToValueAtTime(fq1,now+portaTime);} bO.connect(o1g);bO.start(now);bO.stop(net);noteActiveSources.push({node:bO,type:'osc'});o1fp=bO.frequency; if(osc1ShapeActive){const sh=this.audioContext.createWaveShaper();const ca=(pw1-0.5)*2;sh.curve=this.createShaperCurve(ca*5);bO.disconnect();bO.connect(sh);sh.connect(o1g);noteActiveSources.push({node:sh,type:'shaper'});}}
-
-                 // --- Oscillator 2 ---
-                 let o2g=this.audioContext.createGain();o2g.gain.setValueAtTime(om,now);o2g.connect(ampG);noteActiveSources.push({node:o2g,gainNode:o2g,type:'osc-gain'});
-                 let o2fp=null; let o2PwmDelayNode=null; let pwmN2=null;
-                 const osc2PwActive = this.osc2PwEnabled && (o2w === 'pulse' || o2w === 'square');
-                 const osc2ShapeActive = this.osc2PwEnabled && (o2w === 'sawtooth' || o2w === 'triangle' || o2w === 'sine');
-
-                 if(o2w==='noise'){let nS=this.createNoiseSource(now,net);nS.connect(o2g);noteActiveSources.push({node:nS,type:'noise'});}
-                 else if(osc2PwActive){ /* PWM/Square */ const oa=this.audioContext.createOscillator();oa.type='sawtooth';const ob=this.audioContext.createOscillator();ob.type='sawtooth';const inv=this.audioContext.createGain();inv.gain.value=-1;const pwd=this.audioContext.createDelay(1.0);const p=1/fq2;const cpw=Math.max(0.01,Math.min(0.99,pw2));let dt=cpw*p;dt=Math.max(1e-5,Math.min(p*0.999,dt));pwd.delayTime.setValueAtTime(dt,now); oa.frequency.setValueAtTime(startFreq2,now);ob.frequency.setValueAtTime(startFreq2,now); if(glide){oa.frequency.exponentialRampToValueAtTime(fq2,now+portaTime);ob.frequency.exponentialRampToValueAtTime(fq2,now+portaTime);} oa.connect(o2g);ob.connect(inv);inv.connect(pwd);pwd.connect(o2g);oa.start(now);oa.stop(net);ob.start(now);ob.stop(net);pwmN2={oa,ob,pwd,inv};noteActiveSources.push({node:oa,type:'pwm-sub'},{node:ob,type:'pwm-sub'},{node:inv,gainNode:inv,type:'pwm-sub'},{node:pwd,type:'pwm-sub'});o2fp=[oa.frequency,ob.frequency];o2PwmDelayNode=pwd;}
-                 else{ /* Sine, Triangle, Sawtooth */ let bO=this.audioContext.createOscillator();bO.type=o2w; bO.frequency.setValueAtTime(startFreq2,now);if(glide){bO.frequency.exponentialRampToValueAtTime(fq2,now+portaTime);} bO.connect(o2g);bO.start(now);bO.stop(net);noteActiveSources.push({node:bO,type:'osc'});o2fp=bO.frequency; if(osc2ShapeActive){const sh=this.audioContext.createWaveShaper();const ca=(pw2-0.5)*2;sh.curve=this.createShaperCurve(ca*5);bO.disconnect();bO.connect(sh);sh.connect(o2g);noteActiveSources.push({node:sh,type:'shaper'});}}
-
-                 // --- Amp Env ---
-                 this.applyEnvelope(ampG.gain,0,vf,s*vf,a,d,r,now);
-
-                 // --- Pitch Env (Delayed if Gliding) ---
-                 if(this.pitchEnvEnabled) { // Check if enabled
-                     const pf1=fq1*ctm(pamt),suf1=fq1*ctm(pamt*ps); const pf2=fq2*ctm(pamt),suf2=fq2*ctm(pamt*ps);
-                     const applyPEnvDelayed=(prm,b,pk,su)=>{if(prm)this.applyEnvelope(prm,b,pk,su,pa,pd,pr,pitchEnvStartTime);};
-                     if(Array.isArray(o1fp)){applyPEnvDelayed(o1fp[0],fq1,pf1,suf1);applyPEnvDelayed(o1fp[1],fq1,pf1,suf1);}else{applyPEnvDelayed(o1fp,fq1,pf1,suf1);}
-                     if(Array.isArray(o2fp)){applyPEnvDelayed(o2fp[0],fq2,pf2,suf2);applyPEnvDelayed(o2fp[1],fq2,pf2,suf2);}else{applyPEnvDelayed(o2fp,fq2,pf2,suf2);}
-                 }
-
-                 // --- Filter Env ---
-                 if(this.filterEnvEnabled) { // Check if enabled
-                    const fmf=this.audioContext.sampleRate/2;const fpk=Math.max(20,Math.min(fmf,baseCutoff+famt));const fsus=Math.max(20,Math.min(fmf,baseCutoff+famt*fs));
-                    this.applyEnvelope(this.filter.frequency,baseCutoff,fpk,fsus,fa,fd,fr,now);
-                 }
-
-                 // --- LFO ---
-                 if(noteLfoGain){ /* ... LFO connection logic as before ... */ if(lfoTarget==='pitch'){const clp=(p)=>{if(p)noteLfoGain.connect(p);};if(Array.isArray(o1fp)){clp(o1fp[0]);clp(o1fp[1]);}else clp(o1fp);if(Array.isArray(o2fp)){clp(o2fp[0]);clp(o2fp[1]);}else clp(o2fp);} else if(lfoTarget==='mix'){const lmxg=this.audioContext.createGain();lmxg.gain.setValueAtTime(0.5,now);noteLfoGain.connect(lmxg);const li=this.audioContext.createGain();li.gain.value=-1;lmxg.connect(li);if(o1g)li.connect(o1g.gain);if(o2g)lmxg.connect(o2g.gain);noteActiveSources.push({node:lmxg,gainNode:lmxg,type:'lfo-mod'},{node:li,gainNode:li,type:'lfo-mod'});} else if(lfoTarget==='volume'){noteLfoGain.connect(ampG.gain);} else if(lfoTarget==='cutoff'){noteLfoGain.connect(this.filter.frequency);} else if(lfoTarget==='pwm'){const maxLfoV=7200;let sf1=0,sf2=0;if(o1PwmDelayNode)sf1=(1/fq1/4)/maxLfoV;if(o2PwmDelayNode)sf2=(1/fq2/4)/maxLfoV;if(o1PwmDelayNode&&sf1>0){const sc1=this.audioContext.createGain();sc1.gain.value=sf1;noteLfoGain.connect(sc1);sc1.connect(o1PwmDelayNode.delayTime);noteActiveSources.push({node:sc1,gainNode:sc1,type:'lfo-mod'});} if(o2PwmDelayNode&&sf2>0){const sc2=this.audioContext.createGain();sc2.gain.value=sf2;noteLfoGain.connect(sc2);sc2.connect(o2PwmDelayNode.delayTime);noteActiveSources.push({node:sc2,gainNode:sc2,type:'lfo-mod'});}} }
-
-                 this.activeSources.push(...noteActiveSources); // Add all note-specific sources
-                 if(noteLfo)noteLfo.stop(net); // Schedule LFO stop
-
-                 // --- Update Last Played Frequency ---
-                 this.lastPlayedFrequency = baseFreqRaw; // Store the *base* frequency of the current note
-
-                 // --- Store PWM Node References ---
-                 this.pwmNodes.osc1 = pwmN1; this.pwmNodes.osc2 = pwmN2;
-
+                let lastFreqsForGlide = { osc1: null, osc2: null };
+                if (this.portamentoEnabled && this.activeVoices.size > 0) {
+                    const lastVoiceKey = Math.max(...this.activeVoices.keys());
+                    const lastVoice = this.activeVoices.get(lastVoiceKey);
+                    if (lastVoice) {
+                        lastFreqsForGlide = lastVoice.finalFreqs;
+                    }
+                }
+                
+                const { voice, fq1, fq2 } = this._createNoteVoice(this.audioContext, this.filter, time, noteKey, velocity, lastFreqsForGlide, params);
+                
+                if(voice) {
+                    voice.finalFreqs = { osc1: fq1, osc2: fq2 };
+                    this.activeVoices.set(noteId, voice);
+                    
+                    const totalEnvelopeDuration = params.ampEnv.attack + params.ampEnv.decay + params.ampEnv.release;
+                    const cleanupDelay = (totalEnvelopeDuration * 1000) + 200;
+                    
+                    setTimeout(() => {
+                        voice.nodes.forEach(node => node.disconnect?.());
+                        this.activeVoices.delete(noteId);
+                    }, cleanupDelay);
+                }
             }
 
-            // Corrected applyEnvelope
-            applyEnvelope(param, baseValue, peakValue, sustainValue, attack, decay, release, time) {
-                 if(!(param instanceof AudioParam)) return;
-                 const currentTime = this.audioContext.currentTime;
-                 const startTime = Math.max(time, currentTime); // Use the later of scheduled time or current time
+            _createNoteVoice(context, destinationNode, time, noteKey, velocity, lastFreqs, params) {
+                const now = time;
+                const baseFreqRaw = this.notes[noteKey];
+                if (!baseFreqRaw) return { voice: null, fq1: null, fq2: null };
+            
+                const p = params;
+                const ctm = (c) => Math.pow(2, c / 1200);
+                const stm = (st) => Math.pow(2, st / 12);
+            
+                const fq1 = baseFreqRaw * Math.pow(2, p.osc1.octave) * ctm(p.osc1.detune) * stm(p.osc1.pitch);
+                const fq2 = baseFreqRaw * Math.pow(2, p.osc2.octave) * ctm(p.osc2.detune) * stm(p.osc2.pitch);
+                
+                let nodes = [];
+                let voiceOscs = {};
+            
+                const releaseTime = p.ampEnv.release;
+                const stopTime = now + p.ampEnv.attack + p.ampEnv.decay + releaseTime + 0.1;
 
-                 param.cancelScheduledValues(startTime);
-                 // Start ramp from the parameter's current value at startTime to avoid clicks
-                 param.setValueAtTime(param.value, startTime);
-                 param.linearRampToValueAtTime(peakValue, startTime + attack);
-                 param.linearRampToValueAtTime(sustainValue, startTime + attack + decay);
-                 param.setValueAtTime(sustainValue, startTime + attack + decay); // Ensure hold
-                 param.linearRampToValueAtTime(baseValue, startTime + attack + decay + release);
+                let noteLfo, noteLfoGain;
+                if (p.lfo.enabled && p.lfo.target !== 'off' && p.lfo.amount !== 0) {
+                    noteLfo = context.createOscillator(); noteLfoGain = context.createGain();
+                    noteLfo.type = p.lfo.waveform; noteLfo.frequency.setValueAtTime(p.lfo.rate, now); noteLfoGain.gain.setValueAtTime(p.lfo.amount, now);
+                    noteLfo.connect(noteLfoGain); noteLfo.start(now); noteLfo.stop(stopTime); nodes.push(noteLfo, noteLfoGain);
+                }
+            
+                const vf = velocity / 127;
+                
+                const portaTime = p.portamento.enabled ? Math.max(0.001, p.portamento.time) : 0;
+                const glide = p.portamento.enabled && lastFreqs.osc1 !== null && lastFreqs.osc1 > 0;
+                const startFreq1 = glide ? lastFreqs.osc1 : fq1;
+                const startFreq2 = glide ? lastFreqs.osc2 : fq2;
+                const pitchEnvStartTime = now + (glide ? portaTime : 0);
+                
+                const ampGain = context.createGain();
+                ampGain.connect(destinationNode);
+                nodes.push(ampGain);
+                this.applyEnvelope(ampGain.gain, 0, vf, p.ampEnv.sustain * vf, p.ampEnv.attack, p.ampEnv.decay, releaseTime, now);
+                
+                const createOsc = (oscParams, targetFreq, startFreq) => {
+                    const waveform = oscParams.waveform;
+                    let oscNodes = {};
+                    const volumeCompensations = { sawtooth: 0.65, square: 0.5, pulse: 0.5, sine: 1.0, triangle: 0.8, noise: 0.3 };
+                    const compensationGain = context.createGain();
+                    compensationGain.gain.value = volumeCompensations[waveform] || 1.0;
+                    compensationGain.connect(ampGain);
+                    nodes.push(compensationGain);
+                    
+                    const oscGain = context.createGain(); oscGain.gain.value = oscParams.id === 1 ? (1.0 - p.mixer.oscMix) : p.mixer.oscMix;
+                    oscGain.connect(compensationGain);
+                    nodes.push(oscGain);
+
+                    const pwSim = oscParams.pwEnabled && (waveform === 'pulse' || waveform === 'square');
+                    const shaperActive = oscParams.pwEnabled && waveform === 'sine';
+
+                    if (waveform === 'noise') {
+                        let nS = context.createBufferSource(); nS.buffer = createOfflineNoiseBuffer(context); nS.loop = true; nS.start(now); nS.stop(stopTime); nS.connect(oscGain);
+                        nodes.push(nS);
+                        oscNodes.main = nS;
+                    } else if (pwSim) {
+                        const oa = context.createOscillator(); oa.type = 'sawtooth'; const ob = context.createOscillator(); ob.type = 'sawtooth'; const inv = context.createGain(); inv.gain.value = -1; const pwd = context.createDelay(1.0); const period = 1 / targetFreq; let dt = Math.max(0.01, Math.min(0.99, oscParams.pulseWidth)) * period; pwd.delayTime.setValueAtTime(Math.max(1e-5, dt), now);
+                        oa.frequency.setValueAtTime(startFreq, now); ob.frequency.setValueAtTime(startFreq, now); if (glide) { oa.frequency.exponentialRampToValueAtTime(targetFreq, now + portaTime); ob.frequency.exponentialRampToValueAtTime(targetFreq, now + portaTime); }
+                        oa.connect(oscGain); ob.connect(inv); inv.connect(pwd); pwd.connect(oscGain); oa.start(now); oa.stop(stopTime); ob.start(now); ob.stop(stopTime);
+                        nodes.push(oa, ob, inv, pwd);
+                        oscNodes = { main: [oa, ob], frequency: [oa.frequency, ob.frequency], pwmDelay: pwd };
+                    } else {
+                        let bO = context.createOscillator(); bO.type = waveform;
+                        bO.frequency.setValueAtTime(startFreq, now); if (glide) { bO.frequency.exponentialRampToValueAtTime(targetFreq, now + portaTime); }
+                        if (shaperActive) { const sh = context.createWaveShaper(); sh.curve = this.createShaperCurve((oscParams.pulseWidth - 0.5) * 5); bO.connect(sh); sh.connect(oscGain); nodes.push(sh); }
+                        else { bO.connect(oscGain); }
+                        bO.start(now); bO.stop(stopTime); nodes.push(bO);
+                        oscNodes = { main: bO, frequency: bO.frequency };
+                    }
+                    return oscNodes;
+                };
+
+                voiceOscs.osc1 = createOsc({ ...p.osc1, id: 1 }, fq1, startFreq1);
+                voiceOscs.osc2 = createOsc({ ...p.osc2, id: 2 }, fq2, startFreq2);
+
+                if (p.pitchEnv.enabled) { const applyPEnv = (freqParam, base, amt, sus) => { if (!freqParam) return; const peak = base * ctm(amt); const sustain = base * ctm(amt * sus); if (Array.isArray(freqParam)) { freqParam.forEach(fp => this.applyEnvelope(fp, base, peak, sustain, p.pitchEnv.attack, p.pitchEnv.decay, p.pitchEnv.release, pitchEnvStartTime)); } else { this.applyEnvelope(freqParam, base, peak, sustain, p.pitchEnv.attack, p.pitchEnv.decay, p.pitchEnv.release, pitchEnvStartTime); } }; applyPEnv(voiceOscs.osc1.frequency, fq1, p.pitchEnv.amount, p.pitchEnv.sustain); applyPEnv(voiceOscs.osc2.frequency, fq2, p.pitchEnv.amount, p.pitchEnv.sustain); }
+                if (p.filter.envEnabled && destinationNode instanceof BiquadFilterNode) { const baseCutoff = this.valueToLog(p.filter.cutoff, 20, 20000); const fmf = context.sampleRate / 2; const fpk = Math.max(20, Math.min(fmf, baseCutoff + p.filterEnv.amount)); const fsus = Math.max(20, Math.min(fmf, baseCutoff + p.filterEnv.amount * p.filterEnv.sustain)); this.applyEnvelope(destinationNode.frequency, baseCutoff, fpk, fsus, p.filterEnv.attack, p.filterEnv.decay, p.filterEnv.release, now); }
+                if (noteLfoGain) { const connectLfoToPitch = (freqParam) => { if(!freqParam) return; if(Array.isArray(freqParam)) freqParam.forEach(fp => noteLfoGain.connect(fp)); else noteLfoGain.connect(freqParam); }; if (p.lfo.target === 'pitch') { connectLfoToPitch(voiceOscs.osc1.frequency); connectLfoToPitch(voiceOscs.osc2.frequency); } else if (p.lfo.target === 'cutoff' && destinationNode.frequency) { noteLfoGain.connect(destinationNode.frequency); } else if (p.lfo.target === 'pwm') { if(voiceOscs.osc1.pwmDelay) { const sf1 = (1 / fq1 / 4) / 7200; const sc1 = context.createGain(); sc1.gain.value = sf1; noteLfoGain.connect(sc1); sc1.connect(voiceOscs.osc1.pwmDelay.delayTime); nodes.push(sc1); } if(voiceOscs.osc2.pwmDelay) { const sf2 = (1 / fq2 / 4) / 7200; const sc2 = context.createGain(); sc2.gain.value = sf2; noteLfoGain.connect(sc2); sc2.connect(voiceOscs.osc2.pwmDelay.delayTime); nodes.push(sc2); } } }
+                
+                const voice = { ampGain, nodes, releaseTime, finalFreqs: { osc1: fq1, osc2: fq2 } };
+                return { voice, fq1, fq2 };
             }
 
-            createNoiseSource(startTime, stopTime) { const bs=this.audioContext.sampleRate*2; const nBuf=this.audioContext.createBuffer(1,bs,this.audioContext.sampleRate);const o=nBuf.getChannelData(0);for(let i=0;i<bs;i++)o[i]=Math.random()*2-1;const ns=this.audioContext.createBufferSource();ns.buffer=nBuf;ns.loop=true;ns.start(startTime);ns.stop(stopTime); return ns;}
-            randomizeSteps() { const an=Object.keys(this.notes); for(let i=0;i<16;i++){const s=this.steps[i];s.active=Math.random()>0.4; if(s.active)s.note=an[Math.floor(Math.random()*an.length)]; else if(!s.note)s.note=an[Math.floor(Math.random()*an.length)]; s.velocity=Math.floor(Math.random()*100+28);} this.redrawSequencerUI(); this.redrawVelocityUI();}
-            randomizeSynth() { /* (Added new toggles) */ const rf=(mn,mx)=>Math.random()*(mx-mn)+mn;const ri=(mn,mx)=>Math.floor(rf(mn,mx+1));const ss=(id,v)=>{const s=document.getElementById(id);if(s){s.value=v;s.dispatchEvent(new Event('input',{bubbles:true}));}};const sl=(id,v)=>{const s=document.getElementById(id);if(s){s.value=v;s.dispatchEvent(new Event('change',{bubbles:true}));}};const st=(id,st,fn)=>{const b=document.getElementById(id);if(b){const ia=b.classList.contains('active');if(st!==ia&&!b.disabled)b.click();else if(fn&&typeof this[fn]==='function')this[fn]();}};const waves=['sawtooth','square','pulse','sine','triangle','noise'];sl('waveform1',waves[ri(0,waves.length-1)]);ss('detune1',ri(-50,50));ss('octave1',ri(-1,1));ss('pulseWidth1',rf(0.1,0.9).toFixed(2));st('osc1PwToggleBtn',Math.random()>0.2); sl('waveform2',waves[ri(0,waves.length-1)]);ss('detune2',ri(-50,50));ss('octave2',ri(-1,1));ss('pulseWidth2',rf(0.1,0.9).toFixed(2));st('osc2PwToggleBtn',Math.random()>0.2); ss('oscMix',rf(0,1).toFixed(2)); const lfoWaves=['sine','square','sawtooth','triangle']; sl('lfoWaveform',lfoWaves[ri(0,lfoWaves.length-1)]); ss('lfoRate',rf(0.1,20).toFixed(1));ss('lfoAmount',ri(-6000,6000));const tgts=['off','cutoff','pitch','pwm','mix','volume'];sl('lfoTarget',tgts[ri(0,tgts.length-1)]);st('lfoToggleBtn',Math.random()>0.3); ss('masterVolume',rf(0.4,0.9).toFixed(2)); st('portaToggleBtn',Math.random()>0.7);ss('portaTime',rf(0,0.3).toFixed(3)); ss('cutoff',ri(100,18000));ss('resonance',rf(0,25).toFixed(1));st('filterEnvToggleBtn',Math.random()>0.1); const re=(a,d,s,r,mT=1.5)=>{ss(a,rf(0.001,mT*0.4).toFixed(3));ss(d,rf(0.01,mT).toFixed(3));ss(s,rf(0,1).toFixed(2));ss(r,rf(0.05,mT*1.5).toFixed(3));};re('attack','decay','sustain','release',2.0);re('fAttack','fDecay','fSustain','fRelease');ss('fAmount',ri(-12000,12000));re('pAttack','pDecay','pSustain','pRelease',0.6);ss('pAmount',ri(-2400,2400));st('pitchEnvToggleBtn',Math.random()>0.2); st('delayToggleBtn',Math.random()>0.3,'updateDelaySettings');ss('delayTime',rf(0.05,1.5).toFixed(2));ss('delayFeedback',rf(0,0.85).toFixed(2));ss('delayMix',rf(0,0.6).toFixed(2));if(this.impulseBuffer&&!document.getElementById('reverbToggleBtn').disabled){st('reverbToggleBtn',Math.random()>0.4,'updateReverbSettings');ss('reverbPreDelay',rf(0,0.15).toFixed(3));ss('reverbTone',ri(1500,15000));ss('reverbMix',rf(0,0.5).toFixed(2));}else{st('reverbToggleBtn',false,'updateReverbSettings');}this.updateAllDisplays();}
-            gatherState() { /* (Added toggles) */ return {version:"3.11",osc1:{waveform:document.getElementById('waveform1').value,detune:parseFloat(document.getElementById('detune1').value),octave:parseInt(document.getElementById('octave1').value),pulseWidth:parseFloat(document.getElementById('pulseWidth1').value),pwEnabled:this.osc1PwEnabled},osc2:{waveform:document.getElementById('waveform2').value,detune:parseFloat(document.getElementById('detune2').value),octave:parseInt(document.getElementById('octave2').value),pulseWidth:parseFloat(document.getElementById('pulseWidth2').value),pwEnabled:this.osc2PwEnabled},mixer:{oscMix:parseFloat(document.getElementById('oscMix').value)},master:{volume:parseFloat(document.getElementById('masterVolume').value)},portamento:{enabled:this.portamentoEnabled,time:this.portamentoTime},filter:{cutoff:parseFloat(document.getElementById('cutoff').value),resonance:parseFloat(document.getElementById('resonance').value),envEnabled:this.filterEnvEnabled},ampEnv:{attack:parseFloat(document.getElementById('attack').value),decay:parseFloat(document.getElementById('decay').value),sustain:parseFloat(document.getElementById('sustain').value),release:parseFloat(document.getElementById('release').value)},filterEnv:{attack:parseFloat(document.getElementById('fAttack').value),decay:parseFloat(document.getElementById('fDecay').value),sustain:parseFloat(document.getElementById('fSustain').value),release:parseFloat(document.getElementById('fRelease').value),amount:parseFloat(document.getElementById('fAmount').value)},pitchEnv:{enabled:this.pitchEnvEnabled, attack:parseFloat(document.getElementById('pAttack').value),decay:parseFloat(document.getElementById('pDecay').value),sustain:parseFloat(document.getElementById('pSustain').value),release:parseFloat(document.getElementById('pRelease').value),amount:parseFloat(document.getElementById('pAmount').value)},lfo:{enabled:this.lfoEnabled, waveform:this.lfoWaveformSelect.value,rate:parseFloat(this.lfoRateSlider.value),amount:parseFloat(this.lfoAmountSlider.value),target:this.lfoTargetSelect.value},effects:{delay:{enabled:this.delayEnabled,time:parseFloat(document.getElementById('delayTime').value),feedback:parseFloat(document.getElementById('delayFeedback').value),mix:parseFloat(document.getElementById('delayMix').value)},reverb:{enabled:this.reverbEnabled,preDelay:parseFloat(document.getElementById('reverbPreDelay').value),tone:parseFloat(document.getElementById('reverbTone').value),mix:parseFloat(document.getElementById('reverbMix').value)}},transport:{bpm:parseInt(document.getElementById('bpm').value)},steps:JSON.parse(JSON.stringify(this.steps))}; }
-            savePreset() { const s=this.gatherState();try{const j=JSON.stringify(s,null,2);const b=new Blob([j],{type:"application/json"});const u=URL.createObjectURL(b);const l=document.createElement('a');const t=new Date().toISOString().slice(0,19).replace(/[-T:]/g,"");l.href=u;l.download=`kretzonizer_${t}.skrtz`;document.body.appendChild(l);l.click();document.body.removeChild(l);URL.revokeObjectURL(u);console.log("Preset saved.");}catch(e){console.error("Save Error:",e);alert("Failed to save.");} }
-            handleFileLoad(event) { const f=event.target.files[0];if(!f)return;const r=new FileReader();r.onload=(e)=>{try{const s=JSON.parse(e.target.result);this.applyState(s);console.log(`Preset "${f.name}" loaded.`);event.target.value=null;}catch(er){console.error("Load Error:",er);alert(`Load failed: ${er.message}`);event.target.value=null;}};r.onerror=(e)=>{console.error("Read Error:",e);alert("Read failed.");event.target.value=null;};r.readAsText(f);}
-            applyState(state) { /* (Added toggles) */ if(!state||typeof state!=='object')throw new Error("Invalid preset");console.log("Applying state...");const ss=(id,v)=>{const e=document.getElementById(id);if(e&&v!=null){e.value=v;e.dispatchEvent(new Event('input',{bubbles:true}));}};const sl=(id,v)=>{const e=document.getElementById(id);if(e&&v!=null){e.value=v;e.dispatchEvent(new Event('change',{bubbles:true}));}};const st=(id,en,prop,fn)=>{const b=document.getElementById(id);if(b&&en!=null){this[prop]=en; /* Update internal state first */ const ia=b.classList.contains('active');if(en!==ia&&!b.disabled){b.textContent=`${b.textContent.split(' ')[0]} ${en?'ON':'OFF'}`;b.classList.toggle('active',en);} if(fn&&typeof this[fn]==='function')this[fn]();}};const sn=(id,v)=>{const e=document.getElementById(id);if(e&&v!=null){e.value=v;e.dispatchEvent(new Event('change',{bubbles:true}));}};const s=state; sl('waveform1',s.osc1?.waveform);ss('detune1',s.osc1?.detune??0);ss('octave1',s.osc1?.octave??0);ss('pulseWidth1',s.osc1?.pulseWidth??0.5);st('osc1PwToggleBtn',s.osc1?.pwEnabled??true,'osc1PwEnabled'); sl('waveform2',s.osc2?.waveform);ss('detune2',s.osc2?.detune??0);ss('octave2',s.osc2?.octave??0);ss('pulseWidth2',s.osc2?.pulseWidth??0.5);st('osc2PwToggleBtn',s.osc2?.pwEnabled??true,'osc2PwEnabled'); ss('oscMix',s.mixer?.oscMix);ss('masterVolume',s.master?.volume); ss('cutoff',s.filter?.cutoff);ss('resonance',s.filter?.resonance);st('filterEnvToggleBtn',s.filter?.envEnabled??true,'filterEnvEnabled',''); ss('attack',s.ampEnv?.attack);ss('decay',s.ampEnv?.decay);ss('sustain',s.ampEnv?.sustain);ss('release',s.ampEnv?.release); ss('fAttack',s.filterEnv?.attack);ss('fDecay',s.filterEnv?.decay);ss('fSustain',s.filterEnv?.sustain);ss('fRelease',s.filterEnv?.release);ss('fAmount',s.filterEnv?.amount); ss('pAttack',s.pitchEnv?.attack);ss('pDecay',s.pitchEnv?.decay);ss('pSustain',s.pitchEnv?.sustain);ss('pRelease',s.pitchEnv?.release);ss('pAmount',s.pitchEnv?.amount);st('pitchEnvToggleBtn',s.pitchEnv?.enabled??true,'pitchEnvEnabled'); sl('lfoWaveform',s.lfo?.waveform??'sine');ss('lfoRate',s.lfo?.rate);ss('lfoAmount',s.lfo?.amount);sl('lfoTarget',s.lfo?.target??'off');st('lfoToggleBtn',s.lfo?.enabled??true,'lfoEnabled'); st('portaToggleBtn',s.portamento?.enabled??false,'portamentoEnabled');ss('portaTime',s.portamento?.time??0.1); if(s.effects?.delay){st('delayToggleBtn',s.effects.delay.enabled,'delayEnabled','updateDelaySettings'); ss('delayTime',s.effects.delay.time); ss('delayFeedback',s.effects.delay.feedback); ss('delayMix',s.effects.delay.mix);} if(this.impulseBuffer&&!document.getElementById('reverbToggleBtn').disabled&&s.effects?.reverb){st('reverbToggleBtn',s.effects.reverb.enabled,'reverbEnabled','updateReverbSettings'); ss('reverbPreDelay',s.effects.reverb.preDelay); ss('reverbTone',s.effects.reverb.tone); ss('reverbMix',s.effects.reverb.mix);}else{st('reverbToggleBtn',false,'reverbEnabled','updateReverbSettings');} sn('bpm',s.transport?.bpm); if(s.steps&&Array.isArray(s.steps)&&s.steps.length===16){this.steps=JSON.parse(JSON.stringify(s.steps));this.redrawSequencerUI();this.redrawVelocityUI();}else{console.warn("Preset missing steps.");} this.updateAllDisplays(); console.log("State applied."); }
+            applyEnvelope(param, baseValue, peakValue, sustainValue, attack, decay, release, time) { if (!(param instanceof AudioParam)) return; param.cancelScheduledValues(time); param.setValueAtTime(baseValue, time); param.linearRampToValueAtTime(peakValue, time + attack); param.linearRampToValueAtTime(sustainValue, time + attack + decay); param.setValueAtTime(sustainValue, time + attack + decay); param.linearRampToValueAtTime(baseValue, time + attack + decay + release); }
+            
+            randomizeSteps() { const allNotes = Object.keys(this.notes); for (let i = 0; i < this.sequencerLength; i++) { const step = this.steps[i]; step.active = Math.random() > 0.4; if (step.active) { step.note = allNotes[Math.floor(Math.random() * allNotes.length)]; } else if (!step.note) { step.note = allNotes[Math.floor(Math.random() * allNotes.length)]; } step.velocity = Math.floor(Math.random() * 100 + 28); } this.redrawSequencerUI(); this.redrawVelocityUI(); }
+            randomizeSynth() { const rf = (mn, mx) => Math.random() * (mx - mn) + mn; const ri = (mn, mx) => Math.floor(rf(mn, mx + 1)); const ss = (id, v) => { const e = document.getElementById(id); if (e) e.value = v; }; const sl = (id, v) => { const e = document.getElementById(id); if (e) e.value = v; }; const st = (id, state) => { const b = document.getElementById(id); if (b) { const isActive = b.classList.contains('active'); if (state !== isActive && !b.disabled) b.click(); } }; const waves = ['sawtooth', 'square', 'pulse', 'sine', 'triangle', 'noise']; sl('waveform1', waves[ri(0, waves.length - 1)]); ss('pitch1', ri(-7, 7)); ss('detune1', ri(-50, 50)); ss('octave1', ri(-1, 1)); ss('pulseWidth1', rf(0.1, 0.9).toFixed(2)); st('osc1PwToggleBtn', Math.random() > 0.2); sl('waveform2', waves[ri(0, waves.length - 1)]); ss('pitch2', ri(-7, 7)); ss('detune2', ri(-50, 50)); ss('octave2', ri(-1, 1)); ss('pulseWidth2', rf(0.1, 0.9).toFixed(2)); st('osc2PwToggleBtn', Math.random() > 0.2); ss('oscMix', rf(0, 1).toFixed(2)); const lfoWaves = ['sine', 'square', 'sawtooth', 'triangle']; sl('lfoWaveform', lfoWaves[ri(0, lfoWaves.length - 1)]); ss('lfoRate', rf(0.1, 20).toFixed(1)); ss('lfoAmount', ri(-6000, 6000)); const tgts = ['off', 'cutoff', 'pitch', 'pwm', 'mix', 'volume']; sl('lfoTarget', tgts[ri(0, tgts.length - 1)]); st('lfoToggleBtn', Math.random() > 0.3); ss('masterVolume', rf(0.4, 0.9).toFixed(2)); st('portaToggleBtn', Math.random() > 0.7); ss('portaTime', rf(0, 0.3).toFixed(3)); ss('cutoff', ri(100, 18000)); ss('resonance', rf(0, 25).toFixed(1)); st('filterEnvToggleBtn', Math.random() > 0.1); const re = (a, d, s, r, mT = 1.5) => { ss(a, rf(0.001, mT * 0.4).toFixed(3)); ss(d, rf(0.01, mT).toFixed(3)); ss(s, rf(0, 1).toFixed(2)); ss(r, rf(0.05, mT * 1.5).toFixed(3)); }; re('attack', 'decay', 'sustain', 'release', 2.0); re('fAttack', 'fDecay', 'fSustain', 'fRelease'); ss('fAmount', ri(-12000, 12000)); re('pAttack', 'pDecay', 'pSustain', 'pRelease', 0.6); ss('pAmount', ri(-2400, 2400)); st('pitchEnvToggleBtn', Math.random() > 0.2); st('delayToggleBtn', Math.random() > 0.3); st('delayPingPongToggleBtn', Math.random() > 0.5); st('reverbToggleBtn', Math.random() > 0.4); sl('delayTimeSync', document.getElementById('delayTimeSync').options[ri(0, 13)].value); ss('delayFeedback', rf(0, 0.85).toFixed(2)); ss('delayMix', rf(0, 0.6).toFixed(2)); if (!document.getElementById('reverbToggleBtn').disabled) { ss('reverbPreDelay', rf(0, 0.15).toFixed(3)); ss('reverbTone', ri(1500, 15000)); ss('reverbMix', rf(0, 0.5).toFixed(2)); } document.querySelectorAll('input, select').forEach(el => el.dispatchEvent(new Event('input', {bubbles: true}))); }
+            gatherState() { return { version: "3.8", sequencerLength: this.sequencerLength, osc1: { waveform: document.getElementById('waveform1').value, pitch: parseFloat(document.getElementById('pitch1').value), detune: parseFloat(document.getElementById('detune1').value), octave: parseInt(document.getElementById('octave1').value), pulseWidth: parseFloat(document.getElementById('pulseWidth1').value), pwEnabled: this.osc1PwEnabled }, osc2: { waveform: document.getElementById('waveform2').value, pitch: parseFloat(document.getElementById('pitch2').value), detune: parseFloat(document.getElementById('detune2').value), octave: parseInt(document.getElementById('octave2').value), pulseWidth: parseFloat(document.getElementById('pulseWidth2').value), pwEnabled: this.osc2PwEnabled }, mixer: { oscMix: parseFloat(document.getElementById('oscMix').value) }, master: { volume: parseFloat(document.getElementById('masterVolume').value) }, portamento: { enabled: this.portamentoEnabled, time: this.portamentoTime }, filter: { cutoff: parseFloat(document.getElementById('cutoff').value), resonance: parseFloat(document.getElementById('resonance').value), envEnabled: this.filterEnvEnabled }, ampEnv: { attack: parseFloat(document.getElementById('attack').value), decay: parseFloat(document.getElementById('decay').value), sustain: parseFloat(document.getElementById('sustain').value), release: parseFloat(document.getElementById('release').value) }, filterEnv: { attack: parseFloat(document.getElementById('fAttack').value), decay: parseFloat(document.getElementById('fDecay').value), sustain: parseFloat(document.getElementById('fSustain').value), release: parseFloat(document.getElementById('fRelease').value), amount: parseFloat(document.getElementById('fAmount').value) }, pitchEnv: { enabled: this.pitchEnvEnabled, attack: parseFloat(document.getElementById('pAttack').value), decay: parseFloat(document.getElementById('pDecay').value), sustain: parseFloat(document.getElementById('pSustain').value), release: parseFloat(document.getElementById('pRelease').value), amount: parseFloat(document.getElementById('pAmount').value) }, lfo: { enabled: this.lfoEnabled, waveform: document.getElementById('lfoWaveform').value, rate: parseFloat(document.getElementById('lfoRate').value), amount: parseFloat(document.getElementById('lfoAmount').value), target: document.getElementById('lfoTarget').value }, effects: { delay: { enabled: this.delayEnabled, timeSync: document.getElementById('delayTimeSync').value, feedback: parseFloat(document.getElementById('delayFeedback').value), mix: parseFloat(document.getElementById('delayMix').value), pingPong: this.delayPingPong }, reverb: { enabled: this.reverbEnabled, preDelay: parseFloat(document.getElementById('reverbPreDelay').value), tone: parseFloat(document.getElementById('reverbTone').value), mix: parseFloat(document.getElementById('reverbMix').value) } }, transport: { bpm: parseInt(document.getElementById('bpm').value) }, steps: JSON.parse(JSON.stringify(this.steps)) }; }
+            savePreset() { const state = this.gatherState(); try { const json = JSON.stringify(state, null, 2); const blob = new Blob([json], { type: "application/json" }); const url = URL.createObjectURL(blob); const link = document.createElement('a'); const timestamp = new Date().toISOString().slice(0, 19).replace(/[-T:]/g, ""); link.href = url; link.download = `kretzonizer_${timestamp}.skrtz`; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url); } catch (e) { console.error("Save Error:", e); alert("Failed to save preset."); } }
+            handleFileLoad(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (e) => { try { const state = JSON.parse(e.target.result); this.applyState(state); event.target.value = null; } catch (err) { console.error("Load Error:", err); alert(`Failed to load preset: ${err.message}`); event.target.value = null; } }; reader.onerror = () => { alert("Failed to read the file."); event.target.value = null; }; reader.readAsText(file); }
+            applyState(state) {
+                if (!state || typeof state !== 'object') { console.error("Invalid preset data."); return; }
+                const ss = (id, v) => { const e = document.getElementById(id); if (e && v != null) e.value = v; };
+                const sl = (id, v) => { const e = document.getElementById(id); if (e && v != null) e.value = v; };
+                const st = (id, en, prop) => { if (this[prop] !== en && document.getElementById(id)) document.getElementById(id).click(); };
+                const s = state;
+                if(s.osc1) { sl('waveform1', s.osc1.waveform); ss('pitch1', s.osc1.pitch ?? 0); ss('detune1', s.osc1.detune ?? 0); ss('octave1', s.osc1.octave ?? 0); ss('pulseWidth1', s.osc1.pulseWidth ?? 0.5); st('osc1PwToggleBtn', s.osc1.pwEnabled ?? true, 'osc1PwEnabled'); }
+                if(s.osc2) { sl('waveform2', s.osc2.waveform); ss('pitch2', s.osc2.pitch ?? 0); ss('detune2', s.osc2.detune ?? 0); ss('octave2', s.osc2.octave ?? 0); ss('pulseWidth2', s.osc2.pulseWidth ?? 0.5); st('osc2PwToggleBtn', s.osc2.pwEnabled ?? true, 'osc2PwEnabled'); }
+                if(s.mixer) ss('oscMix', s.mixer.oscMix);
+                if(s.master) ss('masterVolume', s.master.volume);
+                if(s.filter) { ss('cutoff', s.filter.cutoff); ss('resonance', s.filter.resonance); st('filterEnvToggleBtn', s.filter.envEnabled ?? true, 'filterEnvEnabled'); }
+                if(s.ampEnv) { ss('attack', s.ampEnv.attack); ss('decay', s.ampEnv.decay); ss('sustain', s.ampEnv.sustain); ss('release', s.ampEnv.release); }
+                if(s.filterEnv) { ss('fAttack', s.filterEnv.attack); ss('fDecay', s.filterEnv.decay); ss('fSustain', s.filterEnv.sustain); ss('fRelease', s.filterEnv.release); ss('fAmount', s.filterEnv.amount); }
+                if(s.pitchEnv) { ss('pAttack', s.pitchEnv.attack); ss('pDecay', s.pitchEnv.decay); ss('pSustain', s.pitchEnv.sustain); ss('pRelease', s.pitchEnv.release); ss('pAmount', s.pitchEnv.amount); st('pitchEnvToggleBtn', s.pitchEnv.enabled ?? true, 'pitchEnvEnabled'); }
+                if(s.lfo) { sl('lfoWaveform', s.lfo.waveform ?? 'sine'); ss('lfoRate', s.lfo.rate); ss('lfoAmount', s.lfo.amount); sl('lfoTarget', s.lfo.target ?? 'off'); st('lfoToggleBtn', s.lfo.enabled ?? true, 'lfoEnabled'); }
+                if(s.portamento) { st('portaToggleBtn', s.portamento.enabled ?? false, 'portamentoEnabled'); ss('portaTime', s.portamento.time ?? 0.1); }
+                if(s.effects?.delay) { sl('delayTimeSync', s.effects.delay.timeSync ?? '0.25'); ss('delayFeedback', s.effects.delay.feedback); ss('delayMix', s.effects.delay.mix); st('delayPingPongToggleBtn', s.effects.delay.pingPong ?? false, 'delayPingPong'); st('delayToggleBtn', s.effects.delay.enabled, 'delayEnabled'); }
+                if(s.effects?.reverb && !document.getElementById('reverbToggleBtn').disabled) { ss('reverbPreDelay', s.effects.reverb.preDelay); ss('reverbTone', s.effects.reverb.tone); ss('reverbMix', s.effects.reverb.mix); st('reverbToggleBtn', s.effects.reverb.enabled, 'reverbEnabled'); }
+                if(s.transport) { const e = document.getElementById('bpm'); if(e) { e.value = s.transport.bpm; e.dispatchEvent(new Event('change')); } }
+                
+                this.setSequencerLength(s.sequencerLength || 16);
+                ss('sequencerLength', this.sequencerLength);
+                
+                if(s.steps) { this.steps = JSON.parse(JSON.stringify(s.steps)); this.redrawSequencerUI(); this.redrawVelocityUI(); }
 
-            async exportToWav() { /* (Simplified export remains) */ console.log("Init WAV export..."); const btn=document.getElementById('exportWavBtn');btn.textContent='Exporting...';btn.disabled=true; const sr=this.audioContext.sampleRate; const td=16*this.stepInterval; const ed=td+4.0; const offCtx = new OfflineAudioContext(2, Math.ceil(sr * ed), sr); const offFilter=offCtx.createBiquadFilter();offFilter.type='lowpass';offFilter.frequency.value=this.filter.frequency.value;offFilter.Q.value=this.filter.Q.value; const offDelayNode=offCtx.createDelay(2.0);const offDelayFbGain=offCtx.createGain();const offDelayWet=offCtx.createGain();const offDelayDry=offCtx.createGain();const offDelayIn=offCtx.createGain(); const offRevPreDelay=offCtx.createDelay(0.5);const offRevConv=offCtx.createConvolver();const offRevTone=offCtx.createBiquadFilter();offRevTone.type='lowpass';offRevTone.frequency.value=this.reverbToneFilter.frequency.value;offRevTone.Q.value=this.reverbToneFilter.Q.value;const offRevWet=offCtx.createGain(); const offMainGain=offCtx.createGain();offMainGain.gain.value=this.mainGain.gain.value; if(this.impulseBuffer){try{const offIR=createSyntheticImpulse(offCtx);if(offIR)offRevConv.buffer=offIR;}catch(e){console.error("Offline IR Err:",e);}} offFilter.connect(offDelayIn); offDelayIn.connect(offDelayNode);offDelayNode.connect(offDelayWet);offDelayNode.connect(offDelayFbGain);offDelayFbGain.connect(offDelayNode);offDelayIn.connect(offDelayDry); offDelayWet.connect(offRevPreDelay);offDelayDry.connect(offRevPreDelay); offRevPreDelay.connect(offMainGain); offRevPreDelay.connect(offRevConv); offRevConv.connect(offRevTone);offRevTone.connect(offRevWet); offRevWet.connect(offMainGain); offMainGain.connect(offCtx.destination); const dlyT=parseFloat(document.getElementById('delayTime').value);const dlyFb=this.delayEnabled?parseFloat(document.getElementById('delayFeedback').value):0;const dlyMx=this.delayEnabled?parseFloat(document.getElementById('delayMix').value):0; offDelayNode.delayTime.value=dlyT;offDelayFbGain.gain.value=dlyFb;offDelayWet.gain.value=dlyMx;offDelayDry.gain.value=1.0-dlyMx; const revPD=parseFloat(document.getElementById('reverbPreDelay').value);const revMx=(this.reverbEnabled&&this.impulseBuffer)?parseFloat(document.getElementById('reverbMix').value):0; offRevPreDelay.delayTime.value=revPD;offRevWet.gain.value=revMx; if(!this.reverbEnabled||!this.impulseBuffer)offRevWet.gain.value=0; const stepsR=JSON.parse(JSON.stringify(this.steps)); const offParams=this.gatherState(); offParams.baseCutoff=offFilter.frequency.value; offParams.notes=this.notes; offParams.stepInterval=this.stepInterval; const offNoiseBuf = createOfflineNoiseBuffer(offCtx); let lastOfflineFreq = null; for(let i=0; i<16; i++){const step=stepsR[i]; const time=i*offParams.stepInterval; if(step.active&&step.note&&step.velocity>0){lastOfflineFreq=this.renderOfflineNoteSimplified(offCtx,time,step,offParams,offFilter,offNoiseBuf,lastOfflineFreq);} } console.log("Starting simplified offline rendering..."); try { const renderedBuffer = await offCtx.startRendering(); console.log("Rendering complete."); const wavData = this.bufferToWav(renderedBuffer, 16); const blob = new Blob([wavData],{type:'audio/wav'}); const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = 'kretzonizer_export_simple.wav'; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url); console.log("WAV export ready."); } catch (err) { console.error("Render Error:", err); alert(`Export failed: ${err.message}`); } finally { btn.textContent = 'Export to WAV'; btn.disabled = false; } }
-            renderOfflineNoteSimplified(ctx, time, step, params, filter, noiseBuffer, lastFreq) { /* (Includes porta, checks enabled flags) */ const now=time;const bfr=params.notes[step.note];if(!bfr)return null;const v=step.velocity;const vf=v/127;const net=now+params.ampEnv.attack+params.ampEnv.decay+params.ampEnv.release+4.0;const ag=ctx.createGain();ag.connect(filter);const fq1=bfr*Math.pow(2,params.osc1.octave)*Math.pow(2,params.osc1.detune/1200);const fq2=bfr*Math.pow(2,params.osc2.octave)*Math.pow(2,params.osc2.detune/1200);let ctf=fq1;const pTime=params.portamento.enabled?Math.max(0.001,params.portamento.time):0;const glide=params.portamento.enabled&&lastFreq!==null&&pTime>0&&lastFreq!==bfr;const sf1=glide?lastFreq:fq1;const sf2=glide?lastFreq:fq2;const pEST=now+(glide?pTime:0);let o1g=ctx.createGain();o1g.gain.setValueAtTime(1.0-params.mixer.oscMix,now);o1g.connect(ag);let o1fp=null;let io1n=params.osc1.waveform==='noise';const o1pwAct=params.osc1.pwEnabled&&(params.osc1.waveform==='pulse'||params.osc1.waveform==='square');const o1shAct=params.osc1.pwEnabled&&(params.osc1.waveform==='sawtooth'||params.osc1.waveform==='triangle'||params.osc1.waveform==='sine');if(io1n){let n=ctx.createBufferSource();n.buffer=noiseBuffer;n.loop=true;n.start(now);n.stop(net);n.connect(o1g);}else if(o1pwAct){const oa=ctx.createOscillator();oa.type='sawtooth';const ob=ctx.createOscillator();ob.type='sawtooth';const inv=ctx.createGain();inv.gain.value=-1;const del=ctx.createDelay(1.0);const p=1/fq1;const pw=Math.max(0.01,Math.min(0.99,params.osc1.pulseWidth));let dt=pw*p;dt=Math.max(1e-5,Math.min(p*0.999,dt));del.delayTime.setValueAtTime(dt,now);oa.frequency.setValueAtTime(sf1,now);ob.frequency.setValueAtTime(sf1,now);if(glide){oa.frequency.exponentialRampToValueAtTime(fq1,now+pTime);ob.frequency.exponentialRampToValueAtTime(fq1,now+pTime);}oa.connect(o1g);ob.connect(inv);inv.connect(del);del.connect(o1g);oa.start(now);oa.stop(net);ob.start(now);ob.stop(net);o1fp=[oa.frequency,ob.frequency];ctf=fq1;}else{let o=ctx.createOscillator();o.type=params.osc1.waveform;o.frequency.setValueAtTime(sf1,now);if(glide)o.frequency.exponentialRampToValueAtTime(fq1,now+pTime);o.connect(o1g);o.start(now);o.stop(net);o1fp=o.frequency;ctf=fq1;if(o1shAct){const sh=ctx.createWaveShaper();const ca=(params.osc1.pulseWidth-0.5)*2;sh.curve=this.createShaperCurve(ca*5);o.disconnect();o.connect(sh);sh.connect(o1g);}}let o2g=ctx.createGain();o2g.gain.setValueAtTime(params.mixer.oscMix,now);o2g.connect(ag);let o2fp=null;let io2n=params.osc2.waveform==='noise';const o2pwAct=params.osc2.pwEnabled&&(params.osc2.waveform==='pulse'||params.osc2.waveform==='square');const o2shAct=params.osc2.pwEnabled&&(params.osc2.waveform==='sawtooth'||params.osc2.waveform==='triangle'||params.osc2.waveform==='sine');if(io2n){let n=ctx.createBufferSource();n.buffer=noiseBuffer;n.loop=true;n.start(now);n.stop(net);n.connect(o2g);if(ctf===null)ctf=fq2;}else if(o2pwAct){const oa=ctx.createOscillator();oa.type='sawtooth';const ob=ctx.createOscillator();ob.type='sawtooth';const inv=ctx.createGain();inv.gain.value=-1;const del=ctx.createDelay(1.0);const p=1/fq2;const pw=Math.max(0.01,Math.min(0.99,params.osc2.pulseWidth));let dt=pw*p;dt=Math.max(1e-5,Math.min(p*0.999,dt));del.delayTime.setValueAtTime(dt,now);oa.frequency.setValueAtTime(sf2,now);ob.frequency.setValueAtTime(sf2,now);if(glide){oa.frequency.exponentialRampToValueAtTime(fq2,now+pTime);ob.frequency.exponentialRampToValueAtTime(fq2,now+pTime);}oa.connect(o2g);ob.connect(inv);inv.connect(del);del.connect(o2g);oa.start(now);oa.stop(net);ob.start(now);ob.stop(net);o2fp=[oa.frequency,ob.frequency];if(ctf===null)ctf=fq2;}else{let o=ctx.createOscillator();o.type=params.osc2.waveform;o.frequency.setValueAtTime(sf2,now);if(glide)o.frequency.exponentialRampToValueAtTime(fq2,now+pTime);o.connect(o2g);o.start(now);o.stop(net);o2fp=o.frequency;if(ctf===null)ctf=fq2;if(o2shAct){const sh=ctx.createWaveShaper();const ca=(params.osc2.pulseWidth-0.5)*2;sh.curve=this.createShaperCurve(ca*5);o.disconnect();o.connect(sh);sh.connect(o2g);}}this.applyOfflineEnvelope(ag.gain,0,vf,params.ampEnv.sustain*vf,params.ampEnv.attack,params.ampEnv.decay,params.ampEnv.release,now);if(params.pitchEnv.enabled){const ctm=(c)=>Math.pow(2,c/1200);const pf1=fq1*ctm(params.pitchEnv.amount);const sf1=fq1*ctm(params.pitchEnv.amount*params.pitchEnv.sustain);const pf2=fq2*ctm(params.pitchEnv.amount);const sf2=fq2*ctm(params.pitchEnv.amount*params.pitchEnv.sustain);const applyPEnv=(prm,b,pk,su)=>{if(prm)this.applyOfflineEnvelope(prm,b,pk,su,params.pitchEnv.attack,params.pitchEnv.decay,params.pitchEnv.release,pEST);};if(Array.isArray(o1fp)){applyPEnv(o1fp[0],fq1,pf1,sf1);applyPEnv(o1fp[1],fq1,pf1,sf1);}else applyPEnv(o1fp,fq1,pf1,sf1);if(Array.isArray(o2fp)){applyPEnv(o2fp[0],fq2,pf2,sf2);applyPEnv(o2fp[1],fq2,pf2,sf2);}else applyPEnv(o2fp,fq2,pf2,sf2);}if(params.filter.envEnabled){const curCf=filter.frequency.value;const fMax=ctx.sampleRate/2;const fPeak=Math.max(20,Math.min(fMax,curCf+params.filterEnv.amount));const fSus=Math.max(20,Math.min(fMax,curCf+params.filterEnv.amount*params.filterEnv.sustain));this.applyOfflineEnvelope(filter.frequency,curCf,fPeak,fSus,params.filterEnv.attack,params.filterEnv.decay,params.filterEnv.release,now);}return ctf ?? baseFreqRaw;} // Return the target frequency
-            applyOfflineEnvelope(param, baseValue, peakValue, sustainValue, attack, decay, release, time) { if(!(param instanceof AudioParam))return; param.cancelScheduledValues(time); param.setValueAtTime(baseValue, time); param.linearRampToValueAtTime(peakValue, time + attack); param.linearRampToValueAtTime(sustainValue, time + attack + decay); param.setValueAtTime(sustainValue, time + attack + decay); param.linearRampToValueAtTime(baseValue, time + attack + decay + release); }
-            bufferToWav(abuffer, bitsPerSample) { const nc=abuffer.numberOfChannels,sr=abuffer.sampleRate,f=1,s=abuffer.length*nc;const ba=nc*bitsPerSample/8,br=sr*ba,ds=s*bitsPerSample/8;const bf=new ArrayBuffer(44+ds);const vw=new DataView(bf);this.writeString(vw,0,'RIFF');vw.setUint32(4,36+ds,true);this.writeString(vw,8,'WAVE');this.writeString(vw,12,'fmt ');vw.setUint32(16,16,true);vw.setUint16(20,f,true);vw.setUint16(22,nc,true);vw.setUint32(24,sr,true);vw.setUint32(28,br,true);vw.setUint16(32,ba,true);vw.setUint16(34,bitsPerSample,true);this.writeString(vw,36,'data');vw.setUint32(40,ds,true);let o=44;const cs=[];for(let i=0;i<nc;i++)cs.push(abuffer.getChannelData(i));for(let i=0;i<abuffer.length;i++){for(let c=0;c<nc;c++){let sm=cs[c][i];sm=Math.max(-1,Math.min(1,sm));sm=sm<0?sm*32768:sm*32767;vw.setInt16(o,sm,true);o+=2;}}return bf; }
-            writeString(view, offset, string) { for(let i=0;i<string.length;i++)view.setUint8(offset+i,string.charCodeAt(i)); }
+                document.querySelectorAll('input, select').forEach(el => el.dispatchEvent(new Event('input', {bubbles: true})));
+                console.log("State applied.");
+            }
 
-        } // End StepSequencer Class
+            setSequencerLength(len) {
+                const newLength = Math.max(3, Math.min(32, len));
+                if (newLength === this.sequencerLength) return;
 
-        function createOfflineNoiseBuffer(ctx){if(!ctx?.sampleRate)return null;const sz=Math.max(1,Math.ceil(ctx.sampleRate*2));const nb=ctx.createBuffer(1,sz,ctx.sampleRate);const o=nb.getChannelData(0);for(let i=0;i<sz;i++)o[i]=Math.random()*2-1;return nb;}
-        window.addEventListener('load',()=>{try{window.kretzonizer=new StepSequencer();console.log("Kretzonizer v3.11 Initialized");}catch(e){console.error("Init Kretzonizer failed:",e);alert("Error initializing synthesizer.");}});
+                const oldLength = this.sequencerLength;
+                this.sequencerLength = newLength;
+                document.getElementById('sequencerLength').value = newLength;
+
+                if (newLength > oldLength) {
+                    for (let i = oldLength; i < newLength; i++) {
+                        this.steps.push({ active: false, note: 'C3', velocity: 100 });
+                    }
+                } else {
+                    this.steps.length = newLength;
+                }
+                this.initializeStepsUI();
+                this.initializeVelocityUI();
+            }
+            
+            async exportToWav() {
+                console.log("Initializing WAV export...");
+                const btn = document.getElementById('exportWavBtn');
+                btn.textContent = 'Exporting...'; btn.disabled = true;
+                try {
+                    const params = this.gatherState();
+                    const sr = this.audioContext.sampleRate;
+                    const stepInterval = (60 / params.transport.bpm) / 4;
+                    const totalDuration = (params.sequencerLength * stepInterval) + 5.0;
+                    const offCtx = new OfflineAudioContext(2, Math.ceil(sr * totalDuration), sr);
+                    const offFilter = offCtx.createBiquadFilter(); offFilter.type = 'lowpass'; offFilter.frequency.value = this.valueToLog(params.filter.cutoff, 20, 20000); offFilter.Q.value = params.filter.resonance;
+                    const offMainGain = offCtx.createGain(); offMainGain.gain.value = params.master.volume; const offDelayNodeL = offCtx.createDelay(5.0); const offDelayNodeR = offCtx.createDelay(5.0); const offFeedbackL = offCtx.createGain(); const offFeedbackR = offCtx.createGain(); const offDelayWet = offCtx.createGain(); const offDelayDry = offCtx.createGain(); const offDelayIn = offCtx.createGain(); const offSplitter = offCtx.createChannelSplitter(2); const offMerger = offCtx.createChannelMerger(2);
+                    const offRevPreDelay = offCtx.createDelay(0.5); const offRevConv = offCtx.createConvolver(); const offRevTone = offCtx.createBiquadFilter(); offRevTone.type = 'lowpass'; offRevTone.frequency.value = this.valueToLog(params.effects.reverb.tone, 1000, 20000); offRevTone.Q.value = 0.5; const offRevWet = offCtx.createGain();
+                    if (this.impulseBuffer) { offRevConv.buffer = createSyntheticImpulse(offCtx); }
+                    
+                    offFilter.connect(offDelayIn); offDelayIn.connect(offDelayDry); offDelayIn.connect(offDelayWet); offDelayDry.connect(offRevPreDelay); offDelayWet.connect(offSplitter);
+                    offSplitter.connect(offDelayNodeL, 0); offSplitter.connect(offDelayNodeR, 1);
+                    offDelayNodeL.connect(offFeedbackL); offDelayNodeR.connect(offFeedbackR);
+                    if (params.effects.delay.pingPong) { offFeedbackL.connect(offDelayNodeR); offFeedbackR.connect(offDelayNodeL); } else { offFeedbackL.connect(offDelayNodeL); offFeedbackR.connect(offDelayNodeR); }
+                    offDelayNodeL.connect(offMerger, 0, 0); offDelayNodeR.connect(offMerger, 0, 1);
+                    offMerger.connect(offRevPreDelay);
+                    
+                    offRevPreDelay.connect(offMainGain); offRevPreDelay.connect(offRevConv); offRevConv.connect(offRevTone); offRevTone.connect(offRevWet); offRevWet.connect(offMainGain); offMainGain.connect(offCtx.destination);
+                    
+                    const beatDuration = 60.0 / params.transport.bpm; const delayTime = beatDuration * parseFloat(params.effects.delay.timeSync);
+                    offDelayNodeL.delayTime.value = delayTime; offDelayNodeR.delayTime.value = delayTime;
+                    offFeedbackL.gain.value = params.effects.delay.feedback; offFeedbackR.gain.value = params.effects.delay.feedback;
+                    offDelayWet.gain.value = params.effects.delay.enabled ? params.effects.delay.mix : 0; offDelayDry.gain.value = 1.0 - (params.effects.delay.enabled ? params.effects.delay.mix : 0);
+                    offRevPreDelay.delayTime.value = params.effects.reverb.preDelay; offRevWet.gain.value = (params.effects.reverb.enabled && this.impulseBuffer) ? params.effects.reverb.mix : 0;
+                    
+                    let lastOfflineFreqs = { osc1: null, osc2: null };
+                    for (let i = 0; i < params.sequencerLength; i++) {
+                        const step = params.steps[i];
+                        const time = i * stepInterval;
+                        if (step.active && step.note && step.velocity > 0) {
+                            const { fq1, fq2 } = this._createNoteVoice(offCtx, offFilter, time, step.note, step.velocity, lastOfflineFreqs, params);
+                            lastOfflineFreqs = { osc1: fq1, osc2: fq2 };
+                        }
+                    }
+
+                    console.log("Starting offline rendering...");
+                    const renderedBuffer = await offCtx.startRendering();
+                    console.log("Rendering complete.");
+                    const wavData = this.bufferToWav(renderedBuffer, 16);
+                    const blob = new Blob([wavData], { type: 'audio/wav' });
+                    const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = 'kretzonizer_export.wav';
+                    document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
+                    console.log("WAV export ready.");
+                } catch (err) { console.error("Export Error:", err); alert(`Export failed: ${err.message}`); }
+                finally { btn.textContent = 'Export to WAV'; btn.disabled = false; }
+            }
+
+            bufferToWav(abuffer, bitsPerSample) { const numChannels = abuffer.numberOfChannels, sampleRate = abuffer.sampleRate, format = 1, numFrames = abuffer.length; const blockAlign = numChannels * bitsPerSample / 8, byteRate = sampleRate * blockAlign, dataSize = numFrames * blockAlign; const buffer = new ArrayBuffer(44 + dataSize); const view = new DataView(buffer); this.writeString(view, 0, 'RIFF'); view.setUint32(4, 36 + dataSize, true); this.writeString(view, 8, 'WAVE'); this.writeString(view, 12, 'fmt '); view.setUint32(16, 16, true); view.setUint16(20, format, true); view.setUint16(22, numChannels, true); view.setUint32(24, sampleRate, true); view.setUint32(28, byteRate, true); view.setUint16(32, blockAlign, true); view.setUint16(34, bitsPerSample, true); this.writeString(view, 36, 'data'); view.setUint32(40, dataSize, true); let offset = 44; const channels = []; for (let i = 0; i < numChannels; i++) channels.push(abuffer.getChannelData(i)); for (let i = 0; i < numFrames; i++) { for (let c = 0; c < numChannels; c++) { let sample = channels[c][i]; sample = Math.max(-1, Math.min(1, sample)); sample = sample < 0 ? sample * 32768 : sample * 32767; view.setInt16(offset, sample, true); offset += 2; } } return buffer; }
+            writeString(view, offset, string) { for (let i = 0; i < string.length; i++) view.setUint8(offset + i, string.charCodeAt(i)); }
+        }
+
+        function createOfflineNoiseBuffer(ctx) { if (!ctx?.sampleRate) return null; const size = Math.max(1, Math.ceil(ctx.sampleRate * 2)); const noiseBuffer = ctx.createBuffer(1, size, ctx.sampleRate); const output = noiseBuffer.getChannelData(0); for (let i = 0; i < size; i++) output[i] = Math.random() * 2 - 1; return noiseBuffer; }
+        window.addEventListener('load', () => { try { window.kretzonizer = new StepSequencer(); console.log("Kretzonizer v3.8 Initialized"); } catch (e) { console.error("Initialization failed:", e); alert("Error initializing synthesizer. Check the console for details."); } });
     </script>
 </body>
 </html>
