@@ -707,7 +707,7 @@
         }
 
         function createOfflineNoiseBuffer(ctx) { if (!ctx?.sampleRate) return null; const size = Math.max(1, Math.ceil(ctx.sampleRate * 2)); const noiseBuffer = ctx.createBuffer(1, size, ctx.sampleRate); const output = noiseBuffer.getChannelData(0); for (let i = 0; i < size; i++) output[i] = Math.random() * 2 - 1; return noiseBuffer; }
-        window.addEventListener('load', () => { try { window.kretzonizer = new StepSequencer(); console.log("Kretzonizer v3.8 Initialized"); } catch (e) { console.error("Initialization failed:", e); alert("Error initializing synthesizer. Check the console for details."); } });
+        window.addEventListener('load', () => { try { window.kretzonizer = new StepSequencer(); console.log("Kretzonizer v4.0 Initialized"); } catch (e) { console.error("Initialization failed:", e); alert("Error initializing synthesizer. Check the console for details."); } });
     </script>
 </body>
 </html>
