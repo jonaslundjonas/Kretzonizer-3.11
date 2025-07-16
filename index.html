@@ -177,6 +177,7 @@
         <div class="transport">
             <button id="playBtn">Play</button>
             <button id="stopBtn" disabled>Stop</button>
+            <button id="clearSeqBtn">Clear Sequence</button>
             <button id="randomizeBtn">Randomize Sequencer</button>
             <button id="randomSynthBtn">Randomize Synth</button>
             <button id="savePresetBtn">Save Preset</button>
@@ -197,6 +198,8 @@
     <footer> <p>Kretzonizer v4.0</p> </footer>
 
     <script>
+        const defaultState = {"version":"3.8","sequencerLength":32,"osc1":{"waveform":"sawtooth","pitch":0,"detune":0,"octave":-1,"pulseWidth":0.5,"pwEnabled":false},"osc2":{"waveform":"sawtooth","pitch":7,"detune":10,"octave":0,"pulseWidth":0.5,"pwEnabled":false},"mixer":{"oscMix":0.36},"master":{"volume":1},"portamento":{"enabled":true,"time":0.278},"filter":{"cutoff":3931,"resonance":5,"envEnabled":true},"ampEnv":{"attack":0.001,"decay":0.227,"sustain":0,"release":0.001},"filterEnv":{"attack":0.043,"decay":0.122,"sustain":0.24,"release":0.098,"amount":2140},"pitchEnv":{"enabled":true,"attack":0,"decay":0.1,"sustain":0,"release":0,"amount":0},"lfo":{"enabled":true,"waveform":"sine","rate":5,"amount":0,"target":"off"},"effects":{"delay":{"enabled":true,"timeSync":"0.75","feedback":0.28,"mix":0.16,"pingPong":true},"reverb":{"enabled":false,"preDelay":0.01,"tone":8000,"mix":0.25}},"transport":{"bpm":120},"steps":[{"active":true,"note":"C#2","velocity":100},{"active":false,"note":"C3","velocity":100},{"active":false,"note":"C3","velocity":100},{"active":true,"note":"A#1","velocity":100},{"active":false,"note":"C3","velocity":100},{"active":false,"note":"C3","velocity":100},{"active":true,"note":"F#2","velocity":100},{"active":false,"note":"C3","velocity":100},{"active":false,"note":"C3","velocity":100},{"active":true,"note":"F2","velocity":100},{"active":false,"note":"C3","velocity":100},{"active":true,"note":"G#2","velocity":100},{"active":false,"note":"B2","velocity":100},{"active":true,"note":"A#2","velocity":100},{"active":true,"note":"C#2","velocity":100},{"active":false,"note":"C#2","velocity":100},{"active":false,"note":"C3","velocity":100},{"active":true,"note":"D#2","velocity":100},{"active":false,"note":"F#2","velocity":100},{"active":false,"note":"C3","velocity":100},{"active":true,"note":"G#2","velocity":100},{"active":false,"note":"C3","velocity":100},{"active":false,"note":"C3","velocity":100},{"active":true,"note":"D#3","velocity":100},{"active":false,"note":"C3","velocity":100},{"active":true,"note":"E3","velocity":100},{"active":false,"note":"C3","velocity":100},{"active":true,"note":"G3","velocity":100},{"active":false,"note":"C3","velocity":100},{"active":true,"note":"D#3","velocity":100},{"active":false,"note":"C3","velocity":100},{"active":true,"note":"G#3","velocity":100}]};
+
         function createSyntheticImpulse(ctx) {
             const sr = ctx.sampleRate;
             const dur = 1.8, dec = 2.5;
@@ -218,7 +221,7 @@
                 this.isPlaying = false;
                 this.currentStep = 0;
                 this.sequencerLength = 16;
-                this.steps = this.createDefaultSteps(this.sequencerLength);
+                this.steps = [];
                 this.tempo = 120;
                 this.stepInterval = (60 / this.tempo) / 4;
                 this.notes = this.generateNotes();
@@ -226,7 +229,7 @@
                 this.lastNoteId = 0;
                 this.impulseBuffer = null;
                 this.delayEnabled = true;
-                this.delayPingPong = false; // New delay property
+                this.delayPingPong = false;
                 this.reverbEnabled = true;
                 this.portamentoEnabled = false;
                 this.portamentoTime = 0.1;
@@ -246,11 +249,9 @@
 
                 this.setupAudio();
                 this.loadImpulseResponse();
-                this.initializeStepsUI();
-                this.initializeVelocityUI();
+                this.applyState(defaultState);
                 this.setupControls();
                 this.setupWindowListeners();
-                this.updateAllDisplays();
             }
 
             createDefaultSteps(length) { const d = []; for (let i = 0; i < length; i++) d.push({ active: false, note: 'C3', velocity: 100 }); return d; }
@@ -262,9 +263,8 @@
                 this.filter = this.audioContext.createBiquadFilter();
                 this.mainGain = this.audioContext.createGain();
                 this.mainGain.connect(this.audioContext.destination);
-                
                 this.delayInputGain = this.audioContext.createGain();
-                this.delayDryGain = this.audioContext.createGain();
+                this.reverbInputGain = this.audioContext.createGain();
                 this.delayWetGain = this.audioContext.createGain();
                 this.delaySplitter = this.audioContext.createChannelSplitter(2);
                 this.delayMerger = this.audioContext.createChannelMerger(2);
@@ -272,36 +272,29 @@
                 this.delayR = this.audioContext.createDelay(5.0);
                 this.feedbackL = this.audioContext.createGain();
                 this.feedbackR = this.audioContext.createGain();
-                
-                this.reverbPreDelayNode = this.audioContext.createDelay(0.5);
                 this.reverbConvolver = this.audioContext.createConvolver();
-                this.reverbToneFilter = this.audioContext.createBiquadFilter();
                 this.reverbWetGain = this.audioContext.createGain();
 
-                // Connect Main Signal Path
+                // Main Dry Path
+                this.filter.connect(this.mainGain); 
+                // Send to Delay
                 this.filter.connect(this.delayInputGain);
-                this.delayInputGain.connect(this.delayDryGain);
-                this.delayInputGain.connect(this.delayWetGain);
-                this.delayDryGain.connect(this.reverbPreDelayNode);
-                this.delayWetGain.connect(this.delaySplitter);
-
-                // Stereo Delay Path
+                this.delayInputGain.connect(this.delaySplitter);
                 this.delaySplitter.connect(this.delayL, 0);
                 this.delaySplitter.connect(this.delayR, 1);
                 this.delayL.connect(this.feedbackL);
                 this.delayR.connect(this.feedbackR);
-                this.updateDelayRouting(); // Handles ping-pong setup
+                this.updateDelayRouting();
                 this.delayL.connect(this.delayMerger, 0, 0);
                 this.delayR.connect(this.delayMerger, 0, 1);
-                this.delayMerger.connect(this.reverbPreDelayNode);
-
-                // Reverb Path
-                this.reverbPreDelayNode.connect(this.mainGain);
-                this.reverbPreDelayNode.connect(this.reverbConvolver);
-                this.reverbConvolver.connect(this.reverbToneFilter);
-                this.reverbToneFilter.connect(this.reverbWetGain);
+                this.delayMerger.connect(this.delayWetGain);
+                this.delayWetGain.connect(this.mainGain);
+                // Send to Reverb
+                this.filter.connect(this.reverbInputGain);
+                this.reverbInputGain.connect(this.reverbConvolver);
+                this.reverbConvolver.connect(this.reverbWetGain);
                 this.reverbWetGain.connect(this.mainGain);
-
+                
                 this.updateAudioSettings();
             }
             
@@ -309,9 +302,6 @@
                 this.filter.frequency.value = this.valueToLog(parseFloat(document.getElementById('cutoff').value), 20, 20000);
                 this.filter.Q.value = parseFloat(document.getElementById('resonance').value);
                 this.mainGain.gain.value = parseFloat(document.getElementById('masterVolume').value);
-                this.reverbToneFilter.type = 'lowpass';
-                this.reverbToneFilter.frequency.value = this.valueToLog(parseFloat(document.getElementById('reverbTone').value), 1000, 20000);
-                this.reverbToneFilter.Q.value = 0.5;
                 this.updateDelaySettings();
                 this.updateReverbSettings();
             }
@@ -344,35 +334,26 @@
                 const now = this.audioContext.currentTime;
                 const feedback = parseFloat(document.getElementById('delayFeedback').value);
                 const mix = parseFloat(document.getElementById('delayMix').value);
-                
                 const timeValue = parseFloat(document.getElementById('delayTimeSync').value);
                 const beatDuration = 60.0 / this.tempo;
                 const delayTime = beatDuration * timeValue;
-
                 this.delayL.delayTime.setTargetAtTime(delayTime, now, 0.01);
                 this.delayR.delayTime.setTargetAtTime(delayTime, now, 0.01);
                 this.feedbackL.gain.setTargetAtTime(feedback, now, 0.01);
                 this.feedbackR.gain.setTargetAtTime(feedback, now, 0.01);
                 this.delayWetGain.gain.setTargetAtTime(this.delayEnabled ? mix : 0, now, 0.01);
-                this.delayDryGain.gain.setTargetAtTime(1.0 - (this.delayEnabled ? mix : 0), now, 0.01);
             }
 
             updateDelayRouting() {
-                this.feedbackL.disconnect();
-                this.feedbackR.disconnect();
-                if (this.delayPingPong) {
-                    this.feedbackL.connect(this.delayR);
-                    this.feedbackR.connect(this.delayL);
-                } else {
-                    this.feedbackL.connect(this.delayL);
-                    this.feedbackR.connect(this.delayR);
-                }
+                this.feedbackL.disconnect(); this.feedbackR.disconnect();
+                if (this.delayPingPong) { this.feedbackL.connect(this.delayR); this.feedbackR.connect(this.delayL); } 
+                else { this.feedbackL.connect(this.delayL); this.feedbackR.connect(this.delayR); }
             }
 
-            updateReverbSettings() { const now = this.audioContext.currentTime; const preDelay = parseFloat(document.getElementById('reverbPreDelay').value); const mix = parseFloat(document.getElementById('reverbMix').value); this.reverbPreDelayNode.delayTime.setTargetAtTime(preDelay, now, 0.01); this.reverbWetGain.gain.setTargetAtTime(this.reverbEnabled && this.impulseBuffer ? mix : 0, now, 0.01); }
+            updateReverbSettings() { const now = this.audioContext.currentTime; const mix = parseFloat(document.getElementById('reverbMix').value); this.reverbWetGain.gain.setTargetAtTime(this.reverbEnabled && this.impulseBuffer ? mix : 0, now, 0.01); }
 
-            initializeStepsUI() { const sequencer = document.getElementById('sequencer'); const allNotes = Object.keys(this.notes); sequencer.innerHTML = ''; sequencer.style.setProperty('--sequencer-steps', this.sequencerLength); for (let i = 0; i < this.sequencerLength; i++) { const step = document.createElement('button'); step.className = 'step'; step.dataset.index = i; const noteDisplay = document.createElement('div'); noteDisplay.className = 'note-display'; step.appendChild(noteDisplay); step.addEventListener('mousedown', (e) => { if (e.button !== 0) return; const idx = parseInt(e.currentTarget.dataset.index); if (!this.steps[idx].active) { this.steps[idx].active = true; e.currentTarget.classList.add('active'); this.updateNoteDisplay(idx); } this.isNoteDragging = true; this.draggedNoteIndex = idx; this.dragStartY = e.clientY; if (!this.steps[idx].note) this.steps[idx].note = 'C3'; this.dragStartNoteIndex = allNotes.indexOf(this.steps[idx].note); e.preventDefault(); }); step.addEventListener('contextmenu', (e) => { e.preventDefault(); const idx = parseInt(e.currentTarget.dataset.index); this.steps[idx].active = false; e.currentTarget.classList.remove('active'); this.updateNoteDisplay(idx); }); step.addEventListener('dblclick', (e) => { e.preventDefault(); const idx = parseInt(e.currentTarget.dataset.index); this.steps[idx].active = !this.steps[idx].active; e.currentTarget.classList.toggle('active'); this.updateNoteDisplay(idx); }); sequencer.appendChild(step); this.updateNoteDisplay(i); } }
-            initializeVelocityUI() { const velContainer = document.getElementById('velocityContainer'); velContainer.innerHTML = ''; velContainer.style.setProperty('--sequencer-steps', this.sequencerLength); for (let i = 0; i < this.sequencerLength; i++) { const velStep = document.createElement('div'); velStep.className = 'velocity-step'; velStep.dataset.index = i; const velValue = document.createElement('div'); velValue.className = 'velocity-value'; velStep.appendChild(velValue); const updateVelDisplay = () => { if (this.steps[i]) velValue.textContent = String(this.steps[i].velocity); }; velStep.addEventListener('mousedown', (e) => { if (e.button !== 0) return; const idx = parseInt(e.currentTarget.dataset.index); this.isVelocityDragging = true; this.draggedVelocityIndex = idx; this.dragStartY = e.clientY; this.dragStartVelocity = this.steps[i].velocity; e.currentTarget.classList.add('active'); e.preventDefault(); }); velContainer.appendChild(velStep); updateVelDisplay(); } }
+            initializeStepsUI() { const sequencer = document.getElementById('sequencer'); const allNotes = Object.keys(this.notes); sequencer.innerHTML = ''; sequencer.style.setProperty('--sequencer-steps', this.sequencerLength); for (let i = 0; i < this.sequencerLength; i++) { const step = document.createElement('button'); step.className = 'step'; step.dataset.index = i; const noteDisplay = document.createElement('div'); noteDisplay.className = 'note-display'; step.appendChild(noteDisplay); step.addEventListener('mousedown', (e) => { if (e.button !== 0) return; const idx = parseInt(e.currentTarget.dataset.index); if (!this.steps[idx]) this.steps[idx] = { active: false, note: 'C3', velocity: 100 }; if (!this.steps[idx].active) { this.steps[idx].active = true; e.currentTarget.classList.add('active'); this.updateNoteDisplay(idx); } this.isNoteDragging = true; this.draggedNoteIndex = idx; this.dragStartY = e.clientY; if (!this.steps[idx].note) this.steps[idx].note = 'C3'; this.dragStartNoteIndex = allNotes.indexOf(this.steps[idx].note); e.preventDefault(); }); step.addEventListener('contextmenu', (e) => { e.preventDefault(); const idx = parseInt(e.currentTarget.dataset.index); if (this.steps[idx]) { this.steps[idx].active = false; e.currentTarget.classList.remove('active'); this.updateNoteDisplay(idx); } }); step.addEventListener('dblclick', (e) => { e.preventDefault(); const idx = parseInt(e.currentTarget.dataset.index); if (this.steps[idx]) { this.steps[idx].active = !this.steps[idx].active; e.currentTarget.classList.toggle('active'); this.updateNoteDisplay(idx); } }); sequencer.appendChild(step); this.updateNoteDisplay(i); } }
+            initializeVelocityUI() { const velContainer = document.getElementById('velocityContainer'); velContainer.innerHTML = ''; velContainer.style.setProperty('--sequencer-steps', this.sequencerLength); for (let i = 0; i < this.sequencerLength; i++) { const velStep = document.createElement('div'); velStep.className = 'velocity-step'; velStep.dataset.index = i; const velValue = document.createElement('div'); velValue.className = 'velocity-value'; velStep.appendChild(velValue); const updateVelDisplay = () => { if (this.steps[i]) velValue.textContent = String(this.steps[i].velocity); }; velStep.addEventListener('mousedown', (e) => { if (e.button !== 0) return; const idx = parseInt(e.currentTarget.dataset.index); this.isVelocityDragging = true; this.draggedVelocityIndex = idx; this.dragStartY = e.clientY; this.dragStartVelocity = this.steps[idx].velocity; e.currentTarget.classList.add('active'); e.preventDefault(); }); velContainer.appendChild(velStep); updateVelDisplay(); } }
             setupWindowListeners() { document.addEventListener('mousemove', (e) => { if (this.isNoteDragging && this.draggedNoteIndex >= 0) { const i = this.draggedNoteIndex; const allNotes = Object.keys(this.notes); const dy = this.dragStartY - e.clientY; const stepsMoved = Math.floor(dy / 8); let newIndex = this.dragStartNoteIndex + stepsMoved; newIndex = Math.max(0, Math.min(newIndex, allNotes.length - 1)); if (this.steps[i].note !== allNotes[newIndex]) { this.steps[i].note = allNotes[newIndex]; this.updateNoteDisplay(i); } } else if (this.isVelocityDragging && this.draggedVelocityIndex >= 0) { const i = this.draggedVelocityIndex; const dy = this.dragStartY - e.clientY; const offset = Math.floor(dy / 1.5); let newVelocity = this.dragStartVelocity + offset; newVelocity = Math.max(0, Math.min(127, newVelocity)); if (this.steps[i].velocity !== newVelocity) { this.steps[i].velocity = newVelocity; const velStep = document.querySelector(`.velocity-step[data-index='${i}']`); const velValue = velStep?.querySelector('.velocity-value'); if (velValue) velValue.textContent = String(newVelocity); } } }); window.addEventListener('mouseup', (e) => { if (e.button === 0) { if (this.isNoteDragging) { this.isNoteDragging = false; this.draggedNoteIndex = -1; } if (this.isVelocityDragging) { this.isVelocityDragging = false; const velStep = document.querySelector(`.velocity-step[data-index='${this.draggedVelocityIndex}']`); if (velStep) velStep.classList.remove('active'); this.draggedVelocityIndex = -1; } } }); document.addEventListener('contextmenu', (e) => { if (this.isNoteDragging || this.isVelocityDragging) e.preventDefault(); }); }
             
             redrawSequencerUI() { for (let i = 0; i < this.sequencerLength; i++) { this.updateNoteDisplay(i); } }
@@ -414,6 +395,7 @@
                 
                 document.getElementById('playBtn').addEventListener('click', () => this.play());
                 document.getElementById('stopBtn').addEventListener('click', () => this.stop());
+                document.getElementById('clearSeqBtn').addEventListener('click', () => this.clearSequence());
                 document.getElementById('randomizeBtn').addEventListener('click', () => this.randomizeSteps());
                 document.getElementById('randomSynthBtn').addEventListener('click', () => this.randomizeSynth());
                 document.getElementById('exportWavBtn').addEventListener('click', () => this.exportToWav());
@@ -597,7 +579,73 @@
 
             applyEnvelope(param, baseValue, peakValue, sustainValue, attack, decay, release, time) { if (!(param instanceof AudioParam)) return; param.cancelScheduledValues(time); param.setValueAtTime(baseValue, time); param.linearRampToValueAtTime(peakValue, time + attack); param.linearRampToValueAtTime(sustainValue, time + attack + decay); param.setValueAtTime(sustainValue, time + attack + decay); param.linearRampToValueAtTime(baseValue, time + attack + decay + release); }
             
+            async exportToWav() {
+                console.log("Initializing WAV export...");
+                const btn = document.getElementById('exportWavBtn');
+                btn.textContent = 'Exporting...'; btn.disabled = true;
+                try {
+                    const params = this.gatherState();
+                    const sr = this.audioContext.sampleRate;
+                    const stepInterval = (60 / params.transport.bpm) / 4;
+                    const totalDuration = (params.sequencerLength * stepInterval) + 5.0;
+                    const offCtx = new OfflineAudioContext(2, Math.ceil(sr * totalDuration), sr);
+                    const offFilter = offCtx.createBiquadFilter(); offFilter.type = 'lowpass'; offFilter.frequency.value = this.valueToLog(params.filter.cutoff, 20, 20000); offFilter.Q.value = params.filter.resonance;
+                    const offMainGain = offCtx.createGain(); offMainGain.gain.value = params.master.volume;
+                    const offDelayInput = offCtx.createGain(); const offDelayWet = offCtx.createGain(); const offSplitter = offCtx.createChannelSplitter(2); const offMerger = offCtx.createChannelMerger(2); const offDelayL = offCtx.createDelay(5.0); const offDelayR = offCtx.createDelay(5.0); const offFeedbackL = offCtx.createGain(); const offFeedbackR = offCtx.createGain();
+                    const offReverbInput = offCtx.createGain(); const offRevConv = offCtx.createConvolver(); const offRevWet = offCtx.createGain();
+                    
+                    if (this.impulseBuffer) { offRevConv.buffer = createSyntheticImpulse(offCtx); }
+                    
+                    offFilter.connect(offMainGain); // Dry path
+                    offFilter.connect(offDelayInput); // Send to Delay
+                    offDelayInput.connect(offSplitter);
+                    offSplitter.connect(offDelayL, 0); offSplitter.connect(offDelayR, 1);
+                    offDelayL.connect(offFeedbackL); offDelayR.connect(offFeedbackR);
+                    if (params.effects.delay.pingPong) { offFeedbackL.connect(offDelayR); offFeedbackR.connect(offDelayL); } else { offFeedbackL.connect(offDelayL); offFeedbackR.connect(offDelayR); }
+                    offDelayL.connect(offMerger, 0, 0); offDelayR.connect(offMerger, 0, 1);
+                    offMerger.connect(offDelayWet);
+                    offDelayWet.connect(offMainGain);
+
+                    offFilter.connect(offReverbInput); // Send to Reverb
+                    offReverbInput.connect(offRevConv);
+                    offRevConv.connect(offRevWet);
+                    offRevWet.connect(offMainGain);
+
+                    offMainGain.connect(offCtx.destination);
+                    
+                    const beatDuration = 60.0 / params.transport.bpm; const delayTime = beatDuration * parseFloat(params.effects.delay.timeSync);
+                    offDelayL.delayTime.value = delayTime; offDelayR.delayTime.value = delayTime;
+                    offFeedbackL.gain.value = params.effects.delay.feedback; offFeedbackR.gain.value = params.effects.delay.feedback;
+                    offDelayWet.gain.value = params.effects.delay.enabled ? params.effects.delay.mix : 0;
+                    offRevWet.gain.value = (params.effects.reverb.enabled && this.impulseBuffer) ? params.effects.reverb.mix : 0;
+                    
+                    let lastOfflineFreqs = { osc1: null, osc2: null };
+                    for (let i = 0; i < params.sequencerLength; i++) {
+                        const step = params.steps[i];
+                        const time = i * stepInterval;
+                        if (step.active && step.note && step.velocity > 0) {
+                            const { fq1, fq2 } = this._createNoteVoice(offCtx, offFilter, time, step.note, step.velocity, lastOfflineFreqs, params);
+                            lastOfflineFreqs = { osc1: fq1, osc2: fq2 };
+                        }
+                    }
+
+                    console.log("Starting offline rendering...");
+                    const renderedBuffer = await offCtx.startRendering();
+                    console.log("Rendering complete.");
+                    const wavData = this.bufferToWav(renderedBuffer, 16);
+                    const blob = new Blob([wavData], { type: 'audio/wav' });
+                    const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = 'kretzonizer_export.wav';
+                    document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
+                    console.log("WAV export ready.");
+                } catch (err) { console.error("Export Error:", err); alert(`Export failed: ${err.message}`); }
+                finally { btn.textContent = 'Export to WAV'; btn.disabled = false; }
+            }
+
+            bufferToWav(abuffer, bitsPerSample) { const numChannels = abuffer.numberOfChannels, sampleRate = abuffer.sampleRate, format = 1, numFrames = abuffer.length; const blockAlign = numChannels * bitsPerSample / 8, byteRate = sampleRate * blockAlign, dataSize = numFrames * blockAlign; const buffer = new ArrayBuffer(44 + dataSize); const view = new DataView(buffer); this.writeString(view, 0, 'RIFF'); view.setUint32(4, 36 + dataSize, true); this.writeString(view, 8, 'WAVE'); this.writeString(view, 12, 'fmt '); view.setUint32(16, 16, true); view.setUint16(20, format, true); view.setUint16(22, numChannels, true); view.setUint32(24, sampleRate, true); view.setUint32(28, byteRate, true); view.setUint16(32, blockAlign, true); view.setUint16(34, bitsPerSample, true); this.writeString(view, 36, 'data'); view.setUint32(40, dataSize, true); let offset = 44; const channels = []; for (let i = 0; i < numChannels; i++) channels.push(abuffer.getChannelData(i)); for (let i = 0; i < numFrames; i++) { for (let c = 0; c < numChannels; c++) { let sample = channels[c][i]; sample = Math.max(-1, Math.min(1, sample)); sample = sample < 0 ? sample * 32768 : sample * 32767; view.setInt16(offset, sample, true); offset += 2; } } return buffer; }
+            writeString(view, offset, string) { for (let i = 0; i < string.length; i++) view.setUint8(offset + i, string.charCodeAt(i)); }
+        
             randomizeSteps() { const allNotes = Object.keys(this.notes); for (let i = 0; i < this.sequencerLength; i++) { const step = this.steps[i]; step.active = Math.random() > 0.4; if (step.active) { step.note = allNotes[Math.floor(Math.random() * allNotes.length)]; } else if (!step.note) { step.note = allNotes[Math.floor(Math.random() * allNotes.length)]; } step.velocity = Math.floor(Math.random() * 100 + 28); } this.redrawSequencerUI(); this.redrawVelocityUI(); }
+            clearSequence() { for (let i = 0; i < this.sequencerLength; i++) { this.steps[i].active = false; this.steps[i].velocity = 100; } this.redrawSequencerUI(); this.redrawVelocityUI(); }
             randomizeSynth() { const rf = (mn, mx) => Math.random() * (mx - mn) + mn; const ri = (mn, mx) => Math.floor(rf(mn, mx + 1)); const ss = (id, v) => { const e = document.getElementById(id); if (e) e.value = v; }; const sl = (id, v) => { const e = document.getElementById(id); if (e) e.value = v; }; const st = (id, state) => { const b = document.getElementById(id); if (b) { const isActive = b.classList.contains('active'); if (state !== isActive && !b.disabled) b.click(); } }; const waves = ['sawtooth', 'square', 'pulse', 'sine', 'triangle', 'noise']; sl('waveform1', waves[ri(0, waves.length - 1)]); ss('pitch1', ri(-7, 7)); ss('detune1', ri(-50, 50)); ss('octave1', ri(-1, 1)); ss('pulseWidth1', rf(0.1, 0.9).toFixed(2)); st('osc1PwToggleBtn', Math.random() > 0.2); sl('waveform2', waves[ri(0, waves.length - 1)]); ss('pitch2', ri(-7, 7)); ss('detune2', ri(-50, 50)); ss('octave2', ri(-1, 1)); ss('pulseWidth2', rf(0.1, 0.9).toFixed(2)); st('osc2PwToggleBtn', Math.random() > 0.2); ss('oscMix', rf(0, 1).toFixed(2)); const lfoWaves = ['sine', 'square', 'sawtooth', 'triangle']; sl('lfoWaveform', lfoWaves[ri(0, lfoWaves.length - 1)]); ss('lfoRate', rf(0.1, 20).toFixed(1)); ss('lfoAmount', ri(-6000, 6000)); const tgts = ['off', 'cutoff', 'pitch', 'pwm', 'mix', 'volume']; sl('lfoTarget', tgts[ri(0, tgts.length - 1)]); st('lfoToggleBtn', Math.random() > 0.3); ss('masterVolume', rf(0.4, 0.9).toFixed(2)); st('portaToggleBtn', Math.random() > 0.7); ss('portaTime', rf(0, 0.3).toFixed(3)); ss('cutoff', ri(100, 18000)); ss('resonance', rf(0, 25).toFixed(1)); st('filterEnvToggleBtn', Math.random() > 0.1); const re = (a, d, s, r, mT = 1.5) => { ss(a, rf(0.001, mT * 0.4).toFixed(3)); ss(d, rf(0.01, mT).toFixed(3)); ss(s, rf(0, 1).toFixed(2)); ss(r, rf(0.05, mT * 1.5).toFixed(3)); }; re('attack', 'decay', 'sustain', 'release', 2.0); re('fAttack', 'fDecay', 'fSustain', 'fRelease'); ss('fAmount', ri(-12000, 12000)); re('pAttack', 'pDecay', 'pSustain', 'pRelease', 0.6); ss('pAmount', ri(-2400, 2400)); st('pitchEnvToggleBtn', Math.random() > 0.2); st('delayToggleBtn', Math.random() > 0.3); st('delayPingPongToggleBtn', Math.random() > 0.5); st('reverbToggleBtn', Math.random() > 0.4); sl('delayTimeSync', document.getElementById('delayTimeSync').options[ri(0, 13)].value); ss('delayFeedback', rf(0, 0.85).toFixed(2)); ss('delayMix', rf(0, 0.6).toFixed(2)); if (!document.getElementById('reverbToggleBtn').disabled) { ss('reverbPreDelay', rf(0, 0.15).toFixed(3)); ss('reverbTone', ri(1500, 15000)); ss('reverbMix', rf(0, 0.5).toFixed(2)); } document.querySelectorAll('input, select').forEach(el => el.dispatchEvent(new Event('input', {bubbles: true}))); }
             gatherState() { return { version: "3.8", sequencerLength: this.sequencerLength, osc1: { waveform: document.getElementById('waveform1').value, pitch: parseFloat(document.getElementById('pitch1').value), detune: parseFloat(document.getElementById('detune1').value), octave: parseInt(document.getElementById('octave1').value), pulseWidth: parseFloat(document.getElementById('pulseWidth1').value), pwEnabled: this.osc1PwEnabled }, osc2: { waveform: document.getElementById('waveform2').value, pitch: parseFloat(document.getElementById('pitch2').value), detune: parseFloat(document.getElementById('detune2').value), octave: parseInt(document.getElementById('octave2').value), pulseWidth: parseFloat(document.getElementById('pulseWidth2').value), pwEnabled: this.osc2PwEnabled }, mixer: { oscMix: parseFloat(document.getElementById('oscMix').value) }, master: { volume: parseFloat(document.getElementById('masterVolume').value) }, portamento: { enabled: this.portamentoEnabled, time: this.portamentoTime }, filter: { cutoff: parseFloat(document.getElementById('cutoff').value), resonance: parseFloat(document.getElementById('resonance').value), envEnabled: this.filterEnvEnabled }, ampEnv: { attack: parseFloat(document.getElementById('attack').value), decay: parseFloat(document.getElementById('decay').value), sustain: parseFloat(document.getElementById('sustain').value), release: parseFloat(document.getElementById('release').value) }, filterEnv: { attack: parseFloat(document.getElementById('fAttack').value), decay: parseFloat(document.getElementById('fDecay').value), sustain: parseFloat(document.getElementById('fSustain').value), release: parseFloat(document.getElementById('fRelease').value), amount: parseFloat(document.getElementById('fAmount').value) }, pitchEnv: { enabled: this.pitchEnvEnabled, attack: parseFloat(document.getElementById('pAttack').value), decay: parseFloat(document.getElementById('pDecay').value), sustain: parseFloat(document.getElementById('pSustain').value), release: parseFloat(document.getElementById('pRelease').value), amount: parseFloat(document.getElementById('pAmount').value) }, lfo: { enabled: this.lfoEnabled, waveform: document.getElementById('lfoWaveform').value, rate: parseFloat(document.getElementById('lfoRate').value), amount: parseFloat(document.getElementById('lfoAmount').value), target: document.getElementById('lfoTarget').value }, effects: { delay: { enabled: this.delayEnabled, timeSync: document.getElementById('delayTimeSync').value, feedback: parseFloat(document.getElementById('delayFeedback').value), mix: parseFloat(document.getElementById('delayMix').value), pingPong: this.delayPingPong }, reverb: { enabled: this.reverbEnabled, preDelay: parseFloat(document.getElementById('reverbPreDelay').value), tone: parseFloat(document.getElementById('reverbTone').value), mix: parseFloat(document.getElementById('reverbMix').value) } }, transport: { bpm: parseInt(document.getElementById('bpm').value) }, steps: JSON.parse(JSON.stringify(this.steps)) }; }
             savePreset() { const state = this.gatherState(); try { const json = JSON.stringify(state, null, 2); const blob = new Blob([json], { type: "application/json" }); const url = URL.createObjectURL(blob); const link = document.createElement('a'); const timestamp = new Date().toISOString().slice(0, 19).replace(/[-T:]/g, ""); link.href = url; link.download = `kretzonizer_${timestamp}.skrtz`; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url); } catch (e) { console.error("Save Error:", e); alert("Failed to save preset."); } }
@@ -633,9 +681,9 @@
 
             setSequencerLength(len) {
                 const newLength = Math.max(3, Math.min(32, len));
-                if (newLength === this.sequencerLength) return;
+                if (newLength === this.sequencerLength && this.steps.length === newLength) return;
 
-                const oldLength = this.sequencerLength;
+                const oldLength = this.steps.length;
                 this.sequencerLength = newLength;
                 document.getElementById('sequencerLength').value = newLength;
 
@@ -649,65 +697,10 @@
                 this.initializeStepsUI();
                 this.initializeVelocityUI();
             }
-            
-            async exportToWav() {
-                console.log("Initializing WAV export...");
-                const btn = document.getElementById('exportWavBtn');
-                btn.textContent = 'Exporting...'; btn.disabled = true;
-                try {
-                    const params = this.gatherState();
-                    const sr = this.audioContext.sampleRate;
-                    const stepInterval = (60 / params.transport.bpm) / 4;
-                    const totalDuration = (params.sequencerLength * stepInterval) + 5.0;
-                    const offCtx = new OfflineAudioContext(2, Math.ceil(sr * totalDuration), sr);
-                    const offFilter = offCtx.createBiquadFilter(); offFilter.type = 'lowpass'; offFilter.frequency.value = this.valueToLog(params.filter.cutoff, 20, 20000); offFilter.Q.value = params.filter.resonance;
-                    const offMainGain = offCtx.createGain(); offMainGain.gain.value = params.master.volume; const offDelayNodeL = offCtx.createDelay(5.0); const offDelayNodeR = offCtx.createDelay(5.0); const offFeedbackL = offCtx.createGain(); const offFeedbackR = offCtx.createGain(); const offDelayWet = offCtx.createGain(); const offDelayDry = offCtx.createGain(); const offDelayIn = offCtx.createGain(); const offSplitter = offCtx.createChannelSplitter(2); const offMerger = offCtx.createChannelMerger(2);
-                    const offRevPreDelay = offCtx.createDelay(0.5); const offRevConv = offCtx.createConvolver(); const offRevTone = offCtx.createBiquadFilter(); offRevTone.type = 'lowpass'; offRevTone.frequency.value = this.valueToLog(params.effects.reverb.tone, 1000, 20000); offRevTone.Q.value = 0.5; const offRevWet = offCtx.createGain();
-                    if (this.impulseBuffer) { offRevConv.buffer = createSyntheticImpulse(offCtx); }
-                    
-                    offFilter.connect(offDelayIn); offDelayIn.connect(offDelayDry); offDelayIn.connect(offDelayWet); offDelayDry.connect(offRevPreDelay); offDelayWet.connect(offSplitter);
-                    offSplitter.connect(offDelayNodeL, 0); offSplitter.connect(offDelayNodeR, 1);
-                    offDelayNodeL.connect(offFeedbackL); offDelayNodeR.connect(offFeedbackR);
-                    if (params.effects.delay.pingPong) { offFeedbackL.connect(offDelayNodeR); offFeedbackR.connect(offDelayNodeL); } else { offFeedbackL.connect(offDelayNodeL); offFeedbackR.connect(offDelayNodeR); }
-                    offDelayNodeL.connect(offMerger, 0, 0); offDelayNodeR.connect(offMerger, 0, 1);
-                    offMerger.connect(offRevPreDelay);
-                    
-                    offRevPreDelay.connect(offMainGain); offRevPreDelay.connect(offRevConv); offRevConv.connect(offRevTone); offRevTone.connect(offRevWet); offRevWet.connect(offMainGain); offMainGain.connect(offCtx.destination);
-                    
-                    const beatDuration = 60.0 / params.transport.bpm; const delayTime = beatDuration * parseFloat(params.effects.delay.timeSync);
-                    offDelayNodeL.delayTime.value = delayTime; offDelayNodeR.delayTime.value = delayTime;
-                    offFeedbackL.gain.value = params.effects.delay.feedback; offFeedbackR.gain.value = params.effects.delay.feedback;
-                    offDelayWet.gain.value = params.effects.delay.enabled ? params.effects.delay.mix : 0; offDelayDry.gain.value = 1.0 - (params.effects.delay.enabled ? params.effects.delay.mix : 0);
-                    offRevPreDelay.delayTime.value = params.effects.reverb.preDelay; offRevWet.gain.value = (params.effects.reverb.enabled && this.impulseBuffer) ? params.effects.reverb.mix : 0;
-                    
-                    let lastOfflineFreqs = { osc1: null, osc2: null };
-                    for (let i = 0; i < params.sequencerLength; i++) {
-                        const step = params.steps[i];
-                        const time = i * stepInterval;
-                        if (step.active && step.note && step.velocity > 0) {
-                            const { fq1, fq2 } = this._createNoteVoice(offCtx, offFilter, time, step.note, step.velocity, lastOfflineFreqs, params);
-                            lastOfflineFreqs = { osc1: fq1, osc2: fq2 };
-                        }
-                    }
-
-                    console.log("Starting offline rendering...");
-                    const renderedBuffer = await offCtx.startRendering();
-                    console.log("Rendering complete.");
-                    const wavData = this.bufferToWav(renderedBuffer, 16);
-                    const blob = new Blob([wavData], { type: 'audio/wav' });
-                    const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = 'kretzonizer_export.wav';
-                    document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
-                    console.log("WAV export ready.");
-                } catch (err) { console.error("Export Error:", err); alert(`Export failed: ${err.message}`); }
-                finally { btn.textContent = 'Export to WAV'; btn.disabled = false; }
-            }
-
-            bufferToWav(abuffer, bitsPerSample) { const numChannels = abuffer.numberOfChannels, sampleRate = abuffer.sampleRate, format = 1, numFrames = abuffer.length; const blockAlign = numChannels * bitsPerSample / 8, byteRate = sampleRate * blockAlign, dataSize = numFrames * blockAlign; const buffer = new ArrayBuffer(44 + dataSize); const view = new DataView(buffer); this.writeString(view, 0, 'RIFF'); view.setUint32(4, 36 + dataSize, true); this.writeString(view, 8, 'WAVE'); this.writeString(view, 12, 'fmt '); view.setUint32(16, 16, true); view.setUint16(20, format, true); view.setUint16(22, numChannels, true); view.setUint32(24, sampleRate, true); view.setUint32(28, byteRate, true); view.setUint16(32, blockAlign, true); view.setUint16(34, bitsPerSample, true); this.writeString(view, 36, 'data'); view.setUint32(40, dataSize, true); let offset = 44; const channels = []; for (let i = 0; i < numChannels; i++) channels.push(abuffer.getChannelData(i)); for (let i = 0; i < numFrames; i++) { for (let c = 0; c < numChannels; c++) { let sample = channels[c][i]; sample = Math.max(-1, Math.min(1, sample)); sample = sample < 0 ? sample * 32768 : sample * 32767; view.setInt16(offset, sample, true); offset += 2; } } return buffer; }
-            writeString(view, offset, string) { for (let i = 0; i < string.length; i++) view.setUint8(offset + i, string.charCodeAt(i)); }
         }
 
         function createOfflineNoiseBuffer(ctx) { if (!ctx?.sampleRate) return null; const size = Math.max(1, Math.ceil(ctx.sampleRate * 2)); const noiseBuffer = ctx.createBuffer(1, size, ctx.sampleRate); const output = noiseBuffer.getChannelData(0); for (let i = 0; i < size; i++) output[i] = Math.random() * 2 - 1; return noiseBuffer; }
-        window.addEventListener('load', () => { try { window.kretzonizer = new StepSequencer(); console.log("Kretzonizer v4.0 Initialized"); } catch (e) { console.error("Initialization failed:", e); alert("Error initializing synthesizer. Check the console for details."); } });
+        window.addEventListener('load', () => { try { window.kretzonizer = new StepSequencer(); console.log("Kretzonizer v3.8 Initialized"); } catch (e) { console.error("Initialization failed:", e); alert("Error initializing synthesizer. Check the console for details."); } });
     </script>
 </body>
 </html>
